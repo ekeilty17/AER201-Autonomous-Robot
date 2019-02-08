@@ -1,0 +1,111 @@
+/**********Macros************/
+
+#define _XTAL_FREQ 40000000
+#define ON 1
+#define OFF 0 
+#define Bottom_Left PORTCbits.RC7
+#define Bottom_Centre PORTCbits.RC6
+#define Bottom_Right PORTCbits.RC5
+#define Hole 6
+#define Crack 7
+#define NO 0
+#define YES 1
+
+//Detection variables 
+int last_obstruction = 0; 
+float distance_travelled;   //in cm 
+float holes_distance[100]; 
+float  cracks_distance[100]; 
+int holes_n = 0;
+int cracks_n = 0;
+
+
+void detection_ISR(void){
+//    RE1=1 		//turn on light
+//    _delayms(delay_time)
+//    RE1=0           //turn off light
+    if (Bottom_Left==0 && Bottom_Centre==1 && Bottom_Right==0){    //indicates hole detected
+        if (last_obstruction == Hole){
+           if (distance_travelled - holes_distance[holes_n-1] ? 15){  //check if distance between current position and last hole ? 15cm
+                holes_n++;  
+                holes_distance[holes_n-1] = distance_travelled;    //save distance of current hole detected 
+                cone_deployment_holes(); 
+                last_obstruction = Hole; 
+           }else{
+                if (cone_deployed == NO){
+                    holes_n++;
+                    holes_distance[holes_n-1] = distance_travelled;    //save distance of current hole detected 
+                    cone_deployment_holes(); 
+                    last_obstruction = Hole; 
+                }else{
+                    holes_n++;  
+                    holes_distance[holes_n-1] = distance_travelled;    //save distance of current hole detected 
+                    last_obstruction = Hole; 
+                }
+            }
+        }else{
+           if (last_obstruction == Crack){
+                if (distance_travelled - cracks_distance[cracks_n-1] >= 20){ 
+                      holes_n++; 
+                      holes_distance[holes_n-1] = distance_travelled;
+                      cone_deployment_holes();
+                      last_obstruction = Hole; 
+                }else{
+                      if (cone_deployed == NO){
+                           holes_n++;
+                           holes_distance[holes_n-1] = distance_travelled;
+                           cone_deployment_holes(); 
+                           last_obstruction = Hole; 
+                      }else{
+                           holes_n++; 
+                           holes_distance[holes_n-1] = distance_travelled; 
+                           last_obstruction = Hole; 
+                      } 
+                }
+           }
+        }
+    }
+    else{  			                         //2 or 3 sensors triggered
+       if (last_obstruction == Hole){
+           if (distance_travelled - cracks_distance[cracks_n-1] >= 20){  
+                cracks_n++;
+                cracks_distance[number_of_cracks-1] = distance_travelled;
+                cone_deployment_cracks(); 
+                last_obstruction = Crack; 
+           }else{
+                if (cone_deployed == NO){
+                    cracks_n++;
+                    cracks_distance[cracks_n-1] = distance_travelled;
+                    cone_deployment_cracks();
+                    last_obstruction = Crack;
+                }else{
+                    cracks_n++ 
+                    cracks_distance[cracks_n-1] = distance_travelled; 
+                    last_obstruction = Crack; 
+                }
+           }
+       }
+       else{
+           if (last_obstruction == Crack){
+                if (distance_travelled - cracks_distance[cracks_n-1] > = 10){
+                      cracks_n++ 
+                      cracks_distance[cracks_n-1] = distance_travelled;
+                      cone_deployment_cracks();
+                      last_obstruction = Crack;
+                }else{
+                      if (cone_deployed == NO){
+                           cracks_n++; 
+                           cracks_distance[cracks_n-1] = distance_travelled
+                           cone_deployment_cracks();
+                           last_obstruction = Crack; 
+                      }else{
+                           number_of_cracks++; 
+                           cracks_distance[cracks_n-1] = distance_travelled; 
+                           last_obstruction = Crack; 
+                      }
+                }
+           }
+       }
+    }
+    return
+}
