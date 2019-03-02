@@ -1,6 +1,0 @@
-git add *
-git commit "message"
-git pull
-git push
-
-if you do this you will never have issues
