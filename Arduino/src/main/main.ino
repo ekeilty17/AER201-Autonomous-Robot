@@ -125,7 +125,7 @@ void setup() {
   pinMode(txPin, OUTPUT);
     
   // Open software serial port with baud rate = 9600
-  mySerial.begin(9600);
+  mySerial.begin(9600);s
 
   //Set up drive system pins
   pinMode(Left_Wheel_Dir,OUTPUT); 
