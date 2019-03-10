@@ -9,39 +9,30 @@
 
 //Initiate DC Motors
 // AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2, int pwmL, int pwmR)
-AerDCMotors dc(8, 7, 10, 9, 5, 6);
+AerDCMotors dc(8, 10, 18, 19, 9, 11);
 
-int sensor_L = 2;
-int sensor_R = 12;
-
-int c = 0; 
-int d = 0;
+int line_L = 0;
+int line_R = 1;
+int line_interr = 2; 
 
 void setup() {
   // Initialize DC Motors
   dc.init();
 
   // Initialize IR input sensor pins
-  pinMode(sensor_L,INPUT);
-  pinMode(sensor_R,INPUT);
-  attachInterrupt(digitalPinToInterrupt(sensor_L),line_follow,CHANGE); 
-  attachInterrupt(digitalPinToInterrupt(sensor_R),line_follow,CHANGE); 
-
+  pinMode(line_L,INPUT);
+  pinMode(line_R,INPUT);
+  pinMode(line_interr, INPUT);
+  attachInterrupt(digitalPinToInterrupt(line_interr),line_follow,CHANGE); 
   Serial.begin(9600);
+  Serial.print("start");
+  dc.forward(255);
 }
 
 void loop() {
   //Serial.print(digitalRead(4));
   //PWM_test_turn(dc);
   //line_follow(dc);
-
-//  dc.forward(255);
-//  delay(2000);
-//  dc.stop();
-
-  sensor_test(LEFT);
-    
-  while(1);
 }
 
 
@@ -51,68 +42,75 @@ void loop() {
 void line_follow(void) {
   
   int pwm_val = 230;
+  Serial.print("change detected");
   
-  if (digitalRead(sensor_L) == HIGH) {
-    for (int i=pwm_val;i<255;i++){
-      dc.left_wheel_forward(i);
-      delay(50); 
-    }
-  } else {
+  if (digitalRead(line_L) == HIGH) {
     //dc.left_wheel_forward(pwm_val);
+    Serial.print("stop");
     dc.left_wheel_stop();
-  }
-
-  if (digitalRead(sensor_R) == HIGH) {
-    for (int i=pwm_val;i<255;i++){
-      dc.right_wheel_forward(i);
-      delay(50); 
-    }
   } else {
+    Serial.print("go");
+    dc.left_wheel_forward(255);
+//    for (int i=pwm_val;i<255;i++){
+//      dc.left_wheel_forward(i);
+//      delay(50); 
+//    }
+  }
+  if (digitalRead(line_R) == HIGH) {
+    Serial.print("stop"); 
     //dc.right_wheel_forward(pwm_val);
     dc.right_wheel_stop();
+  } else {
+    Serial.print("go");
+    dc.right_wheel_forward(255);
+//    for (int i=pwm_val;i<255;i++){
+//      dc.right_wheel_forward(i);
+//      delay(50); 
+//    }
   }
-  
 }
 
-void line_follow_old(void) {
-  if (digitalRead(sensor_L) && c == 0) {
-    dc.left_wheel_forward(255);
-    c = 0;
-  }else if (digitalRead(sensor_L) && c == 1){
-    for (int i=220;i<255;i++){
-      //analogWrite(5,i);
-      dc.left_wheel_forward(i);
-      delay(50); 
-    }
-    c = 0; 
-  }else{
-    for (int i=255;i<220;i--){
-      //analogWrite(5,i);
-      dc.left_wheel_forward(i);
-      delay(50); 
-    }
-    c = 1;
-  }
-  
-  if (digitalRead(sensor_R) && d == 0) {
-    dc.right_wheel_forward(255);
-    d = 0;
-  }else if (digitalRead(sensor_R) && d == 1){
-    for (int i=220;i<255;i++){
-      //analogWrite(6,i);
-      dc.right_wheel_forward(i);
-      delay(50); 
-    }
-    d = 0; 
-  }else{
-    for (int i=255;i<220;i--){
-      //analogWrite(6,i);
-      dc.right_wheel_forward(i);
-      delay(50); 
-    }
-    d = 1;
-  }
-}
+
+
+//void line_follow_old(void) {
+//  if (digitalRead(line_L) && c == 0) {
+//    dc.left_wheel_forward(255);
+//    c = 0;
+//  }else if (digitalRead(line_L) && c == 1){
+//    for (int i=220;i<255;i++){
+//      //analogWrite(5,i);
+//      dc.left_wheel_forward(i);
+//      delay(50); 
+//    }
+//    c = 0; 
+//  }else{
+//    for (int i=255;i<220;i--){
+//      //analogWrite(5,i);
+//      dc.left_wheel_forward(i);
+//      delay(50); 
+//    }
+//    c = 1;
+//  }
+//  
+//  if (digitalRead(line_R) && d == 0) {
+//    dc.right_wheel_forward(255);
+//    d = 0;
+//  }else if (digitalRead(line_R) && d == 1){
+//    for (int i=220;i<255;i++){
+//      //analogWrite(6,i);
+//      dc.right_wheel_forward(i);
+//      delay(50); 
+//    }
+//    d = 0; 
+//  }else{
+//    for (int i=255;i<220;i--){
+//      //analogWrite(6,i);
+//      dc.right_wheel_forward(i);
+//      delay(50); 
+//    }
+//    d = 1;
+//  }
+//}
 
 /*
  * Interrupt Test
@@ -120,7 +118,7 @@ void line_follow_old(void) {
 void sensor_test(int isRight) {
   Serial.print(digitalRead(2));
   if (isRight) {
-    if (digitalRead(sensor_R) == HIGH) {
+    if (digitalRead(line_R) == HIGH) {
       dc.right_wheel_forward(255);
       delay(1000);
       dc.stop();
@@ -130,7 +128,7 @@ void sensor_test(int isRight) {
       dc.stop();
     }
   } else {
-    if (digitalRead(sensor_L) == HIGH) {
+    if (digitalRead(line_L) == HIGH) {
       dc.left_wheel_forward(255);
       delay(1000);
       dc.stop();

@@ -10,16 +10,14 @@ AerDCMotors :: AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2){
     _pinR1 = pinR1;
     _pinR2 = pinR2;
 }
-AerDCMotors :: AerDCMotors(int pinL1, int pinL2, int pwmL, int pwmR){
+AerDCMotors :: AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2, int pwmL, int pwmR){
     _pinL1 = pinL1;
     _pinL2 = pinL2;
+    _pinR1 = pinR1;
+    _pinR2 = pinR2;
     _pwmL = pwmL;
     _pwmR = pwmR;
 }
-
-#define _pinR1 A4
-#define _pinR2 A5
-
 void AerDCMotors :: init() {
     //Assigning pins
     pinMode(_pinL1,OUTPUT);
