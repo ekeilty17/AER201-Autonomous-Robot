@@ -1,4 +1,4 @@
-#include "<AerServo.cpp>"
+#include "AerServo/AerServo.cpp"
 
 #define RIGHT true
 #define LEFT false
@@ -12,12 +12,15 @@ void setup() {
 
 void loop() {
 
-  servo.displace_left(20);
+//  servo.setCurr_pos(19.0); 
+//  servo.hard_left();
+  delay(2000); 
+  servo.displace_right(3.5);
 
 //  delay(1000);
 //  servo.displace_right(10);
   //displacement_test(servo, 1200, RIGHT);
-  //self_consistency_test(servo, 10, LEFT);
+//  self_consistency_test(servo, 10, LEFT);
   
   while(1); 
 
