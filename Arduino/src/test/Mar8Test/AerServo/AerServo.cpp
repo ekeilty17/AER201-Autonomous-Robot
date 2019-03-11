@@ -65,7 +65,7 @@ float AerServo :: move_to(float x) {
   return _curr_pos;
 }
 float AerServo :: middle() {
-  this -> move_to(8.5);
+  this -> move_to(9.5);
   return 8.5;
 }
 float AerServo :: hard_left() {
@@ -79,10 +79,11 @@ float AerServo :: hard_right() {
   return 17;
 }
 void AerServo :: reset(){
-  if (_curr_pos < 8.5) {
+  if (_curr_pos < 9.5) {
     this -> hard_left();
   } else {
     this -> hard_right();
   }
   this -> middle();
+  _curr_pos = 9.5;
 }

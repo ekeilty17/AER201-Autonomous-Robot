@@ -7,13 +7,23 @@
 #define RIGHT true
 #define LEFT false
 
+bool first = true;
+
 //Initiate DC Motors
 // AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2, int pwmL, int pwmR)
-AerDCMotors dc(8, 10, 18, 19, 9, 11);
+AerDCMotors dc(9, 11, 5, 6);
 
-int line_L = 0;
-int line_R = 1;
-int line_interr = 2; 
+int line_L = 4;
+int line_R = 8;
+int line_interr = 3; 
+
+int x = 0;
+
+boolean stopp_left = false;
+boolean stopp_right = false;  
+boolean startt_left = false; 
+boolean startt_right = false; 
+
 
 void setup() {
   // Initialize DC Motors
@@ -26,48 +36,102 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(line_interr),line_follow,CHANGE); 
   Serial.begin(9600);
   Serial.print("start");
+  Serial.print('\n');
   dc.forward(255);
+  
+//  dc.forward(255);
+//  delay(2000);
+//  dc.backward(255);
+//  delay(2000);
+//  dc.stop();
 }
 
 void loop() {
   //Serial.print(digitalRead(4));
   //PWM_test_turn(dc);
   //line_follow(dc);
+  //dc.forward(225);
+//  Serial.print(x);
+//  Serial.print('\n');
+////  dc.forward(255);
+//  dc.stop();
+//  dc.left_wheel_forward(255);
+//  delay(1000);
+//  dc.left_wheel_stop();
+//  delay(1000);
+//  dc.left_wheel_backward(255);
+//  delay(1000);
+//
+//  dc.stop();
+//  dc.right_wheel_forward(255);
+//  delay(1000);
+//  dc.right_wheel_stop();
+//  delay(1000);
+//  dc.right_wheel_backward(255);
+//  delay(1000);
+
+  if (stopp_left){
+    dc.left_wheel_stop();
+    stopp_left = false;
+    Serial.print("left wheel stop");
+    Serial.print('\n'); 
+  }
+  if (stopp_right){
+    dc.right_wheel_stop();
+    stopp_right = false;
+    Serial.print("right wheel stop");
+    Serial.print('\n');
+  }
+  if (startt_left){
+    dc.left_wheel_forward(255);
+    startt_left = false;
+    Serial.print("left forward");
+    Serial.print('\n');
+  }
+  if (startt_right){
+    dc.right_wheel_forward(255);
+    startt_right = false;
+    Serial.print("right forward");
+    Serial.print('\n'); 
+  }
 }
 
 
-/*
- * Functionality
- */
+ 
 void line_follow(void) {
-  
-  int pwm_val = 230;
-  Serial.print("change detected");
-  
-  if (digitalRead(line_L) == HIGH) {
-    //dc.left_wheel_forward(pwm_val);
-    Serial.print("stop");
-    dc.left_wheel_stop();
-  } else {
-    Serial.print("go");
-    dc.left_wheel_forward(255);
-//    for (int i=pwm_val;i<255;i++){
-//      dc.left_wheel_forward(i);
-//      delay(50); 
-//    }
-  }
-  if (digitalRead(line_R) == HIGH) {
-    Serial.print("stop"); 
-    //dc.right_wheel_forward(pwm_val);
-    dc.right_wheel_stop();
-  } else {
-    Serial.print("go");
-    dc.right_wheel_forward(255);
-//    for (int i=pwm_val;i<255;i++){
-//      dc.right_wheel_forward(i);
-//      delay(50); 
-//    }
-  }
+
+  //if (first) {
+    //  int pwm_val = 230;
+    Serial.print("change detected");
+    Serial.print('\n');
+    
+    if (digitalRead(line_L) == HIGH) {
+      //dc.left_wheel_forward(pwm_val);
+      //Serial.print("stop");
+      stopp_left = true; 
+      Serial.print("LEFT Stop");
+      Serial.print('\n');
+    }if (digitalRead(line_L) == LOW) {
+      //dc.left_wheel_forward(pwm_val);
+      //Serial.print("stop");
+      startt_left = true; 
+      Serial.print("LEFT Start");
+      Serial.print('\n');
+    }
+    if (digitalRead(line_R) == HIGH) {
+      //Serial.print("stop"); 
+      //dc.right_wheel_forward(pwm_val);
+      stopp_right = true; 
+      Serial.print("RIGHT Stop");
+      Serial.print('\n');
+    } if (digitalRead(line_R) == LOW) {
+      //dc.left_wheel_forward(pwm_val);
+      //Serial.print("stop");
+      startt_right = true; 
+      Serial.print("Right Start");
+      Serial.print('\n');
+    }
+
 }
 
 
@@ -113,8 +177,6 @@ void line_follow(void) {
 //}
 
 /*
- * Interrupt Test
- */
 void sensor_test(int isRight) {
   Serial.print(digitalRead(2));
   if (isRight) {
@@ -123,7 +185,7 @@ void sensor_test(int isRight) {
       delay(1000);
       dc.stop();
     } else {
-      dc.right_wheel_backward(255);
+      dc.right_wheel_backward();
       delay(1000);
       dc.stop();
     }
@@ -133,7 +195,7 @@ void sensor_test(int isRight) {
       delay(1000);
       dc.stop();
     } else {
-      dc.left_wheel_backward(255);
+      dc.left_wheel_backward();
       delay(1000);
       dc.stop();
     }
@@ -141,9 +203,6 @@ void sensor_test(int isRight) {
   
 }
 
-/*
- * Motion Tests
- */
 void PWM_test_turn(AerDCMotors dc){
   
   dc.forward(255); 
@@ -161,7 +220,7 @@ void PWM_test_turn(AerDCMotors dc){
 
 void right_turn(AerDCMotors dc) {
   dc.left_wheel_forward(255);
-  dc.right_wheel_backward(255);
+  dc.right_wheel_backward();
   delay(1200);
   dc.stop();
   delay(1200);
@@ -170,7 +229,7 @@ void right_turn(AerDCMotors dc) {
   dc.stop();
   delay(1200);
   dc.left_wheel_forward(255);
-  dc.right_wheel_backward(255);
+  dc.right_wheel_backward();
   delay(1200);
   dc.stop();
 }
@@ -179,7 +238,7 @@ void wheel_test(AerDCMotors dc, int pwm_val, int dir) {
   if (dir == FORWARD) {
     dc.forward(pwm_val);
   } else if (dir == BACKWARD) {
-    dc.backward(pwm_val);
+    dc.backward();
   } else {
     dc.stop();
   }
@@ -194,3 +253,4 @@ void turning_self_consistency_test(AerDCMotors dc, int isRight) {
     dc.u_turn_left();
   }
 }
+*/
