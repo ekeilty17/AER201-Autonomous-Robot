@@ -1,6 +1,6 @@
 #include "AerSteppers/AerSteppers.cpp"
 
-AerSteppers steppers(2, 3, 4, 5);
+AerSteppers steppers(14,15,16,17);
 
 void setup() {
   steppers.init();

@@ -4,7 +4,7 @@
 #define LEFT false
 
 //Initiate Servo
-AerServo servo(6);
+AerServo servo(10);
 
 void setup() {
   servo.init();
@@ -15,7 +15,13 @@ void loop() {
 //  servo.setCurr_pos(19.0); 
 //  servo.hard_left();
   delay(2000); 
-  servo.displace_right(3.5);
+  servo.move_right();
+  delay(1000);
+  servo.stop();
+  delay(1000);
+  servo.move_left();
+  delay(1000);
+  servo.stop();
 
 //  delay(1000);
 //  servo.displace_right(10);
