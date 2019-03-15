@@ -7,7 +7,7 @@
 
 //Cone Deployment System Definitions 
 #define Bottom_Left 7
-#define Bottom_Centre 4
+#define Bottom_Centre 3
 #define Bottom_Right 8
 #define Hole 26
 #define Crack 27
@@ -22,6 +22,7 @@
 volatile int current_position = 0;
 volatile int number_of_cones_deployed = 0;
 volatile boolean cone_deploy = false;
+volatile boolean first = true;
 
 //Cone Deployment Functions
 void cone_deployment();
@@ -56,17 +57,16 @@ void detection_ISR();
 
 void setup() {
   dc.init();
-
   servo.init(); 
-
   stepp.init();
-  
+
   //Interrupts 
-  pinMode(Detect_Interr, INPUT);
-  attachInterrupt(digitalPinToInterrupt(Detect_Interr), detection_ISR, FALLING);
+  pinMode(Bottom_Centre, INPUT);
+  attachInterrupt(digitalPinToInterrupt(Bottom_Centre), detection_ISR, RISING);
   Serial.begin(9600);
   Serial.print("start");
   Serial.print("\n");
+  
 }
 
 void loop() {
@@ -87,65 +87,7 @@ void loop() {
 }
 
 //Interrupt sequence if cone detected
-/*
-void detection_ISR(){
-     
-    int sensors = 100*digitalRead(Bottom_Left) + 10*digitalRead(Bottom_Centre) + digitalRead(Bottom_Right);
-    
-    if (sensors == 010) {
-      dc.stop();
-      cone_deploy = true; 
-      hole = YES; 
-      hole_or_crack = Hole; 
-      Serial.print("Hole");
-      Serial.print("\t");
-    }
-    
-     switch(sensors) {
-      // Hole
-      case 010:
-        dc.stop();
-        cone_deploy = true; 
-        hole = YES; 
-        hole_or_crack = Hole; 
-        Serial.print("Hole");
-        Serial.print("\t");
-        break;
-      // Left Crack
-      case 100:
-      case 110:
-        dc.stop();
-        crack_position = LEFT;
-        cone_deploy = true; 
-        left_crack = YES; 
-        hole_or_crack = Crack;
-        Serial.print("Left Crack");
-        Serial.print("\t");
-        break;
-      // Right Crack
-      case 001:
-      case 011:
-        dc.stop();
-        crack_position = RIGHT;
-        cone_deploy = true; 
-        right_crack = YES;
-        hole_or_crack = Crack;
-        Serial.print("Right Crack");
-        Serial.print("\t");
-        break;
-      // Centre Crack
-      case 111:
-        dc.stop();
-        crack_position = CENTRE;
-        cone_deploy = true; 
-        hole_or_crack = Crack; 
-        Serial.print("Centre Crack");
-        Serial.print("\t");
-        break;
-      // Nothing detected
-      default:
-        return;
-     }
+
      hole = NA;
      left_crack = NA; 
      right_crack = NA; 
@@ -153,35 +95,27 @@ void detection_ISR(){
 }
 */
 
+unsigned long lastInterrupt = 0;
 void detection_ISR(){
-     //Immediately stop
-     int sensors = 100*digitalRead(Bottom_Left) + 10*digitalRead(Bottom_Centre) + digitalRead(Bottom_Right);
-     Serial.print("here");
-     Serial.print("\n");
-     Serial.print(sensors);
-     
-     if (digitalRead(Bottom_Left)==0 && digitalRead(Bottom_Centre)==0 && digitalRead(Bottom_Right)==0){
-         return; 
-     }
-     //else if (sensors == 000) {
-     if (digitalRead(Bottom_Left)==0 && digitalRead(Bottom_Right)==0){    //indicates hole detected
-         dc.stop();
-         cone_deploy = true; 
-         hole = YES; 
-         hole_or_crack = Hole; 
-         Serial.print("Hole");
-         Serial.print("\t");
-     } 
-     if (digitalRead(Bottom_Left)==1){    //indicates crack detected
+
+    // To prevent repeated input due to bad sensor signal
+    if (millis() - lastInterrupt > 1) {
+        
+        Serial.print("here");
+        Serial.print("\t");
+        
+        int sensors = 100*digitalRead(Bottom_Right) + 10*digitalRead(Bottom_Centre) + digitalRead(Bottom_Left);
+        Serial.print(sensors);
+        Serial.print("\n");
+
+        if (sensors == 10) { // hole
           dc.stop();
-          crack_position = LEFT;
           cone_deploy = true; 
-          left_crack = YES; 
-          hole_or_crack = Crack;
-          Serial.print("Left Crack");
+          hole = YES; 
+          hole_or_crack = Hole; 
+          Serial.print("Hole");
           Serial.print("\t");
-         
-     } if (digitalRead(Bottom_Right)==1){    //indicates crack detected
+        } else if (sensors == 110) {  // right crack
           dc.stop();
           crack_position = RIGHT;
           cone_deploy = true; 
@@ -189,36 +123,30 @@ void detection_ISR(){
           hole_or_crack = Crack;
           Serial.print("Right Crack");
           Serial.print("\t");
-          
-          
-     }
-     if (left_crack == YES && right_crack == YES){    //indicates crack detected
-       dc.stop();
-       crack_position = CENTRE;
-       cone_deploy = true; 
-       hole_or_crack = Crack; 
-       Serial.print("Centre Crack");
-       Serial.print("\t");
-     }
-//     if (hole == YES && left_crack == YES && right_crack != YES){    //indicates hole detected
-//       crack_position = LEFT;
-//       cone_deploy = true; 
-//       hole_or_crack = Crack; 
-//       Serial.print("Left Crack");
-//       Serial.print("\t");
-//     }   
-//     if (hole == YES && left_crack != YES && right_crack == YES){    //indicates hole detected
-//       crack_position = RIGHT;
-//       cone_deploy = true; 
-//       hole_or_crack = Crack; 
-//       Serial.print("Right Crack");
-//       Serial.print("\t");
-//     }     
-//     detachInterrupt(digitalPinToInterrupt(Detect_Interr));
-     hole = NA;
-     left_crack = NA; 
-     right_crack = NA; 
-     return;
+        } else if (sensors == 11) {  // left crack
+          dc.stop();
+          crack_position = LEFT;
+          cone_deploy = true; 
+          left_crack = YES; 
+          hole_or_crack = Crack;
+          Serial.print("Left Crack");
+          Serial.print("\t");
+        } else if (sensors == 111) {  // centre crack
+           dc.stop();
+          crack_position = CENTRE;
+          cone_deploy = true; 
+          hole_or_crack = Crack; 
+          Serial.print("Centre Crack");
+          Serial.print("\t");
+        }
+        
+    }
+
+    lastInterrupt = millis();
+    hole = NA;
+    left_crack = NA; 
+    right_crack = NA; 
+    return;
 }
 
 //
