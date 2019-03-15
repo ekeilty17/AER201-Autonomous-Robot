@@ -346,6 +346,35 @@ void __interrupt() interruptHandler(void){
        distance_travelled = distance_travelled + 1.06103295395; 
        INT0IF = 0; //Clear interrupt flag 
     }
-    INTCONbits.GIE = 1; // Enable interrupts 
+    //Check if arduino nano sent the PIC data 
+//    if(RCIE && RCIF){
+//        if (RCREG == 'A'){
+//            status = 'A'; 
+//        }
+//        else{
+//            if (data_count == 0){
+//                total_cones = RCREG; 
+//                data_count++;
+//            }
+//            else if (data_count == 1){
+//                total_cracks = RCREG; 
+//                data_count++;
+//            }
+//            else if (data_count == 2){
+//                total_holes = RCREG; 
+//                data_count++;
+//            }
+//            else if (data_count >= 3 && data_count < (total_cracks+3)){
+//                crack_dist[data_count-3] = RCREG; 
+//                data_count++; 
+//            }
+//            else if (data_count >= (3+total_cracks) && data_count < (total_cracks+total_holes+3)){
+//                hole_dist[data_count-(3+total_cracks)] = RCREG; 
+//                data_count++; 
+//            }
+//        }
+//        RCIF = 0; //Clear interrupt flag 
+//    }
+//    INTCONbits.GIE = 1; // Enable interrupts 
 }
 
