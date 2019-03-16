@@ -232,8 +232,9 @@ void hole_deploy(){
 //    delay(5000);
     dc.stop();
 //     servo.to_middle()
-    //servo.move_to(9.5);
+    servo.move_to(9.5);
     stepp.drop_cone();
+    servo.hard_left();
     return;
 }
 
