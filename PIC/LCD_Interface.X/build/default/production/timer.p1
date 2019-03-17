@@ -649,8 +649,32 @@ Version 4.0 HI-TECH Software Intermediate Code
 [; ;timer.c: 35: }
 [e :UE 272 ]
 }
+"37
+[; ;timer.c: 37: int keypad_total(unsigned char first, unsigned char second){
+[v _keypad_total `(i ~T0 @X0 1 ef2`uc`uc ]
+{
+[e :U _keypad_total ]
+[v _first `uc ~T0 @X0 1 r1 ]
+[v _second `uc ~T0 @X0 1 r2 ]
+[f ]
+"38
+[; ;timer.c: 38:     int first_int = (int)first;
+[v _first_int `i ~T0 @X0 1 a ]
+[e = _first_int -> _first `i ]
+"39
+[; ;timer.c: 39:     int second_int = (int)second;
+[v _second_int `i ~T0 @X0 1 a ]
+[e = _second_int -> _second `i ]
+"40
+[; ;timer.c: 40:     return first_int*10+second_int;
+[e ) + * _first_int -> 10 `i _second_int ]
+[e $UE 284  ]
 "41
-[; ;timer.c: 41: int time_elapsed(unsigned char begin_min, unsigned char begin_sec,unsigned char end_min,unsigned char end_sec, int*array){
+[; ;timer.c: 41: }
+[e :UE 284 ]
+}
+"47
+[; ;timer.c: 47: int time_elapsed(unsigned char begin_min, unsigned char begin_sec,unsigned char end_min,unsigned char end_sec, int*array){
 [v _time_elapsed `(i ~T0 @X0 1 ef5`uc`uc`uc`uc`*i ]
 {
 [e :U _time_elapsed ]
@@ -660,53 +684,53 @@ Version 4.0 HI-TECH Software Intermediate Code
 [v _end_sec `uc ~T0 @X0 1 r4 ]
 [v _array `*i ~T0 @X0 1 r5 ]
 [f ]
-"42
-[; ;timer.c: 42:     int b_min_int = atohtoi(begin_min);
+"48
+[; ;timer.c: 48:     int b_min_int = atohtoi(begin_min);
 [v _b_min_int `i ~T0 @X0 1 a ]
 [e = _b_min_int ( _atohtoi (1 _begin_min ]
-"43
-[; ;timer.c: 43:     int b_sec_int = atohtoi(begin_sec);
+"49
+[; ;timer.c: 49:     int b_sec_int = atohtoi(begin_sec);
 [v _b_sec_int `i ~T0 @X0 1 a ]
 [e = _b_sec_int ( _atohtoi (1 _begin_sec ]
-"44
-[; ;timer.c: 44:     int e_min_int = atohtoi(end_min);
+"50
+[; ;timer.c: 50:     int e_min_int = atohtoi(end_min);
 [v _e_min_int `i ~T0 @X0 1 a ]
 [e = _e_min_int ( _atohtoi (1 _end_min ]
-"45
-[; ;timer.c: 45:     int e_sec_int = atohtoi(end_sec);
+"51
+[; ;timer.c: 51:     int e_sec_int = atohtoi(end_sec);
 [v _e_sec_int `i ~T0 @X0 1 a ]
 [e = _e_sec_int ( _atohtoi (1 _end_sec ]
-"46
-[; ;timer.c: 46:     int begin_s = b_min_int*60+b_sec_int;
+"52
+[; ;timer.c: 52:     int begin_s = b_min_int*60+b_sec_int;
 [v _begin_s `i ~T0 @X0 1 a ]
 [e = _begin_s + * _b_min_int -> 60 `i _b_sec_int ]
-"47
-[; ;timer.c: 47:     int end_s = e_min_int*60+e_sec_int;
+"53
+[; ;timer.c: 53:     int end_s = e_min_int*60+e_sec_int;
 [v _end_s `i ~T0 @X0 1 a ]
 [e = _end_s + * _e_min_int -> 60 `i _e_sec_int ]
-"48
-[; ;timer.c: 48:     int total_s = end_s - begin_s;
+"54
+[; ;timer.c: 54:     int total_s = end_s - begin_s;
 [v _total_s `i ~T0 @X0 1 a ]
 [e = _total_s - _end_s _begin_s ]
-"49
-[; ;timer.c: 49:     int minutes = total_s/60;
+"55
+[; ;timer.c: 55:     int minutes = total_s/60;
 [v _minutes `i ~T0 @X0 1 a ]
 [e = _minutes / _total_s -> 60 `i ]
-"50
-[; ;timer.c: 50:     int seconds = total_s%60;
+"56
+[; ;timer.c: 56:     int seconds = total_s%60;
 [v _seconds `i ~T0 @X0 1 a ]
 [e = _seconds % _total_s -> 60 `i ]
-"51
-[; ;timer.c: 51:     array[0] = seconds;
+"57
+[; ;timer.c: 57:     array[0] = seconds;
 [e = *U + _array * -> -> 0 `i `x -> -> # *U _array `i `x _seconds ]
-"52
-[; ;timer.c: 52:     array[1] = minutes;
+"58
+[; ;timer.c: 58:     array[1] = minutes;
 [e = *U + _array * -> -> 1 `i `x -> -> # *U _array `i `x _minutes ]
-"53
-[; ;timer.c: 53:     return 0;
+"59
+[; ;timer.c: 59:     return 0;
 [e ) -> 0 `i ]
-[e $UE 284  ]
-"54
-[; ;timer.c: 54: }
-[e :UE 284 ]
+[e $UE 285  ]
+"60
+[; ;timer.c: 60: }
+[e :UE 285 ]
 }

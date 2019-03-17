@@ -98,7 +98,7 @@ void putch(char data){
 
 
 
-void main(void) {    
+void main(void) {  
     //Setting up interrupts
     INTCONbits.GIE = 1; // Enable interrupts 
     INTCONbits.PEIE = 1; //Enable peripherals

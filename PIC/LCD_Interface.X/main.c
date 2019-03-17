@@ -44,6 +44,15 @@ int total_holes = 0;
 float crack_dist[50];
 float hole_dist[50]; 
 
+/****Keypad Interface Variables****/
+const char keys[] = "123A456B789C*0#D";
+unsigned char first_digit = 20;
+unsigned char second_digit = 20;
+int total_cones;
+
+/****Arduino Status Variables*****/
+unsigned char status = 'N'; 
+
 const char reset[7] = {
     0x00, // Second
     0x46, // Minute
@@ -76,7 +85,31 @@ void main(void) {
     cursor_reset();
     
     /*****Setting up Arduino-PIC communication - Start***/
-    unsigned char data; // Holds the data to be sent/received
+    
+    // Configure the baud rate generator for 9600 bits per second
+    long baudRate = 9600;
+    SPBRG = (unsigned char)((_XTAL_FREQ / (64 * baudRate)) - 1);
+    
+    // Configure transmit control register
+    TXSTAbits.TX9 = 0; // Use 8-bit transmission (8 data bits, no parity bit)
+    TXSTAbits.SYNC = 0; // Asynchronous communication
+    TXSTAbits.TXEN = 1; // Enable transmitter
+    __delay_ms(5); // Enabling the transmitter requires a few CPU cycles for stability
+    
+    // Configure receive control register
+    RCSTAbits.RX9 = 0; // Use 8-bit reception (8 data bits, no parity bit)
+    RCSTAbits.CREN = 1; // Enable receiver
+    
+    // Enforce correct pin configuration for relevant TRISCx
+    TRISCbits.TRISC6 = 0; // TX = output
+    TRISCbits.TRISC7 = 1; // RX = input
+   
+    // Enable serial peripheral
+    RCSTAbits.SPEN = 1;
+
+    // Set enable bit to get interrupts
+    PIE1bits.RCIE = 1; 
+    
     /*****Setting up Arduino-PIC communication - End***/
     
     //Setting up lights for Detection System
@@ -128,12 +161,40 @@ void main(void) {
             line_2(); 
             printf("%02x:%02x:%02x", time[2],time[1],time[0]); // HH:MM:SS
             __delay_ms(1000); //update printf output every second
-            if (key_pressed){
+            if (key_pressed){   //Start sequence 
                 key_pressed = 0;
                     break; 
             }
         } 
     clear();      //Clear LCD screen, exited standby-mode 
+   
+    //Getting total # of cones data 
+    while(1){
+        if(key_pressed){
+            key_pressed = 0; // Clear the flag
+            
+            // Write key press data to bottom line of LCD
+            unsigned char keypress = (PORTB & 0xF0) >> 4;
+            if (keys[keypress] == 'A'){      //Enter # of cones, then press A to start
+                break;
+            }
+            if (first_digit == 20){
+                first_digit = keypress; 
+            }
+            if (first_digit != 20){
+                second_digit = keypress;
+            }
+            printf("%x",keys[keypress]);
+            total_cones = keypad_total(first_digit, second_digit);
+            //Send cones data to Arduino
+             while(!TXIF | !TRMT){
+                continue;
+             }
+            // Load data into the transmit register, TXREG, 'A' means start/stop
+            TXREG = total_cones;
+            __delay_ms(1000);   //Wait for processing 
+        }
+    }
     
     // Read current time for Operation Start 
     // Reset RTC memory pointer
@@ -150,42 +211,35 @@ void main(void) {
     I2C_Master_Stop(); 
     
     /****Signal Arduino Nano to Start*/
-    I2C_Master_Start();
-    I2C_Master_Write(0b00010000); // 7-bit Arduino slave address + write
-    I2C_Master_Write('A');       // Write 'A' to  Arduino to start 
-    I2C_Master_Stop();
+    // Wait until the previous TXREG data has completed its transfer 
+    // into the TSR and the TSR has finished transmitting all bits 
+    // before loading the TXREG register
+    while(!TXIF | !TRMT){
+        continue;
+    }
+    // Load data into the transmit register, TXREG, 'A' means start/stop
+    TXREG = 'A';
+    __delay_ms(1000);   //Wait for processing 
     
     //Disable Keypad pins and Enable Rotary encoder sequence 
     Keypad_Disable = 1;   //Disable keypad pins 
     INTCONbits.RBIE = 1;  //Enable on-change pins 
+    
+    
 
     while(1){
         /****Send Arduino Nano total distance travelled data */
-        I2C_Master_Start();
-        I2C_Master_Write(0b00010000); // 7-bit Arduino slave address + write
-        I2C_Master_Write(distance_travelled);  // Load total distance travelled data to register 
-        I2C_Master_Stop();
-        
-        /****Read from Arduino Nano*****/
-        I2C_Master_Start();
-        I2C_Master_Write(0b00010001); // 7-bit Arduino slave address + Read
-        data = I2C_Master_Read(NACK); // Read 
-        I2C_Master_Stop();
-        
-        //Check if Arduino Nano has signaled PIC to turn on Detection System
-        if (data == 'H'){            //  H = Turn on light for hole
-            Hole_Light = 1; 
-            __delay_ms(1000);
-            Hole_Light = 0;
+        // Wait until the previous TXREG data has completed its transfer 
+        // into the TSR and the TSR has finished transmitting all bits 
+        // before loading the TXREG register
+        while(!TXIF | !TRMT){
+            continue;
         }
-        if (data == 'C'){            //  C = Turn on light for crack
-            Crack_Light = 1;
-            __delay_ms(1000);
-            Crack_Light = 1; 
-        }
+        // Load total distance travelled data to register
+        TXREG = distance_travelled;
         
         //Check if Arduino Nano has signaled PIC to stop
-        if (data == 'A'){            // A = Stop
+        if (status == 'A'){
             break; 
         }
     }
@@ -206,37 +260,6 @@ void main(void) {
     int op_time[2];   //op_time[1] = min, op_time[0] = seconds 
     time_elapsed(begin_min, begin_sec, end_min, end_sec, op_time);
     
-    //Receive operation data from Arduino 
-    while(1){
-        /****Read from Arduino Nano*****/
-        I2C_Master_Start();
-        I2C_Master_Write(0b00010001); // 7-bit Arduino slave address + Read
-        data = I2C_Master_Read(NACK); // Read 
-        I2C_Master_Stop();
-        if (data_count == 0){
-            total_cones = data; 
-            data_count++;
-        }
-        else if (data_count == 1){
-            total_cracks = data; 
-            data_count++;
-        }
-        else if (data_count == 2){
-            total_holes = data; 
-            data_count++;
-        }
-        else if (data_count >= 3 && data_count < (total_cracks+3)){
-            crack_dist[data_count-3] = data; 
-            data_count++; 
-        }
-        else if (data_count >= (3+total_cracks) && data_count < (total_cracks+total_holes+3)){
-            hole_dist[data_count-(3+total_cracks)] = data; 
-            data_count++; 
-        }
-        else if (data_count >= (total_cracks+total_holes+3)){
-            break; 
-        }
-    }
     
     //Enable Keypad pins 
     Keypad_Disable = 0; 
@@ -351,6 +374,17 @@ void __interrupt() interruptHandler(void){
 //        if (RCREG == 'A'){
 //            status = 'A'; 
 //        }
+          //Check if Arduino Nano has signaled PIC to turn on Detection System
+//          if (RCREG == 'H'){            //  H = Turn on light for hole
+//                Hole_Light = 1; 
+//                __delay_ms(1000);
+//                Hole_Light = 0;
+//          }
+//          if (RCREG == 'C'){            //  C = Turn on light for crack
+//            Crack_Light = 1;
+//            __delay_ms(1000);
+//            Crack_Light = 1; 
+//          }
 //        else{
 //            if (data_count == 0){
 //                total_cones = RCREG; 
