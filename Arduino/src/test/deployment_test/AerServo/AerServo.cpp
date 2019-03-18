@@ -40,17 +40,21 @@ void AerServo :: stop() {
 }
 
 //Relative Displacement
-void AerServo :: displace_right(float dx) {
+float AerServo :: displace_right(float dx) {
   this -> move_right();
   int t = (int) (dx * 1000) / _velocity_r;
   delay(t);
   this -> stop();
+  _curr_pos -= dx;
+  return _curr_pos;
 }
-void AerServo :: displace_left(float dx) {
+float AerServo :: displace_left(float dx) {
   this -> move_left();
   int t = (int) (dx * 1000) / _velocity_l;
   delay(t);
   this -> stop();
+  _curr_pos -= dx;
+  return _curr_pos;
 }
 
 // Moving to specific positions
@@ -61,11 +65,13 @@ float AerServo :: move_to(float x) {
     this -> displace_left(_curr_pos - x);
   }
   _curr_pos = x;
-  delay(500);
   return _curr_pos;
 }
-float AerServo :: middle() {
-  this -> move_to(9.5);
+float AerServo :: move_to_manual(float x) {
+    return 10.0;
+}
+float AerServo :: to_middle() {
+  this -> move_to(8.5);
   return 8.5;
 }
 float AerServo :: hard_left() {
@@ -78,12 +84,13 @@ float AerServo :: hard_right() {
   _curr_pos = 17;
   return 17;
 }
-void AerServo :: reset(){
+float AerServo :: reset(){
   if (_curr_pos < 9.5) {
     this -> hard_left();
   } else {
     this -> hard_right();
   }
-  this -> middle();
-  _curr_pos = 9.5;
+  this -> to_middle();
+  _curr_pos = 8.5;
+  return 8.5;
 }

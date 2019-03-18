@@ -56,7 +56,6 @@ void AerSteppers :: drop_cone() {
     
     for(int i=0; i<64; i++) {
       full_drive();
-      // slows down during period where cone drops
       if ((i > 40) && (i < 50)) {
         delay(_time_delay);
       }

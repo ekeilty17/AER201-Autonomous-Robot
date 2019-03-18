@@ -9,8 +9,8 @@
 #define SENSOR_CENTRE     3     // Interrupt pin
 #define SENSOR_CENTER     3     // Interrupt pin
 
-#define HOLE              10
-#define LEFT_CRACK        11
+#define HOLE               10
+#define LEFT_CRACK         11
 #define RIGHT_CRACK       110
 #define CENTRE_CRACK      111
 #define CENTER_CRACK      111
@@ -35,8 +35,8 @@ void center_crack_deploy();
 void detection_ISR();
 
 //Initialize Queues
-Queue HC_q(10);
-Queue HC_Dist_q(10);
+Queue HC_q(8);
+Queue HC_Dist_q(8);
 
 //Initialize DC Motors
 // AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2)
@@ -46,7 +46,7 @@ AerDCMotors dc(5, 6, 9, 11);
 AerServo servo(10); 
 
 //Initialize Steppers, pins A0:3
-AerSteppers stepp(14,15,16,17); 
+AerSteppers stepp(14, 15, 16, 17); 
 
 void detection_ISR(); 
 
@@ -61,6 +61,8 @@ void setup() {
   pinMode(SENSOR_CENTRE, INPUT);
   attachInterrupt(digitalPinToInterrupt(SENSOR_CENTRE), detection_ISR, RISING);
   Serial.begin(9600);
+
+  delay(2000);
   
   Serial.print("start");
   Serial.print("\n");
@@ -164,6 +166,10 @@ void cone_deployment(){
       default:
         break;
     }
+
+    // putting servo in neutral position
+    servo.to_middle();
+    
   }
   
   last_obstruction[0] = obstruction;
@@ -209,40 +215,71 @@ bool shouldDeploy(int prev, int curr, float diff) {
 void hole_deploy() {
   Serial.print("In 'hole_deploy()'");
   Serial.print("\n");
-//  servo.to_middle();
-  servo.move_to(9.5);
+  
+  servo.to_middle();
   stepp.drop_cone();
-  servo.hard_left();
+  
   return;
 }
 
 void left_crack_deploy() {
   Serial.print("In 'left_crack_deploy()'");
   Serial.print("\n");
-  servo.displace_right(2.1);
+
+  // Cone 1
+  servo.hard_left();
+  servo.move_to(0 + 2);
   stepp.drop_cone();
-  servo.displace_right(10.5); //check for setting current_position inside code
+  // Cone 2
+  servo.move_to(10 + 2);
   stepp.drop_cone();
+  
+//  servo.displace_right(2.1);
+//  stepp.drop_cone();
+//  servo.displace_right(10.5); //check for setting current_position inside code
+//  stepp.drop_cone();
+  
 }
 
 void right_crack_deploy() {
   Serial.print("In 'right_crack_deploy()'");
   Serial.print("\n");
+
+  // Cone 1
   servo.hard_right();
-  servo.displace_left(2.1);
+  servo.move_to(16 + 2);
   stepp.drop_cone();
-  servo.displace_left(10.5); //check for setting current_position inside code
+  // Cone 2
+  servo.move_to(6 + 2);
   stepp.drop_cone();
+  
+//  servo.hard_right();
+//  servo.displace_left(2.1);
+//  stepp.drop_cone();
+//  servo.displace_left(10.5); //check for setting current_position inside code
+//  stepp.drop_cone();
+  
 }
 
 void centre_crack_deploy() {
   Serial.print("In 'centre_crack_deploy()'");
   Serial.print("\n");
-  servo.displace_right(5.1);
+
+  // Cone 1
+  servo.hard_left();
+  servo.move_to(3 + 2);
   stepp.drop_cone();
+  // Cone 2
   servo.hard_right();
-  servo.displace_left(5.1);
+  servo.move_to(13 + 2);
   stepp.drop_cone();
+  
+//  servo.displace_right(5.1);
+//  stepp.drop_cone();
+//  servo.hard_right();
+//  servo.displace_left(5.1);
+//  stepp.drop_cone();
+  
 }
 void center_crack_deploy() {
   centre_crack_deploy();

@@ -35,15 +35,16 @@ class AerServo : public Servo {
     void stop();
 
     //Relative Displacement
-    void displace_right(float dx);
-    void displace_left(float dx);
+    float displace_right(float dx);
+    float displace_left(float dx);
 
     // Moving to specific positions
     float move_to(float x);
-    float middle();
+    float move_to_manual(float x);
+    float to_middle();
     float hard_left();
     float hard_right();
-    void reset();
+    float reset();
 };
 
 #endif  /* AERSERVO_H */
