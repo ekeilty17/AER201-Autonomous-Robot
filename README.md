@@ -4,4 +4,6 @@ The goal of this project is to create an autonomous robot that can preform a ser
 
 ## Hardware
 
+* PIC18F4620-I/P
+
 ## Functionality

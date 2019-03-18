@@ -1,16 +1,10 @@
 #include "AerDCMotors/AerDCMotors.cpp"
 
-#define FORWARD 1
-#define STOP 0
-#define BACKWARD -1
-
 #define RIGHT true
 #define LEFT false
 //Initiate DC Motors
 // AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2)
 AerDCMotors dc(9, 11, 5, 6);
-
-boolean startt_right = false; 
 
 void setup() {
   // Initialize DC Motors
@@ -18,9 +12,12 @@ void setup() {
 }
 
 void loop() {
-  wheel_test(dc, 255);
-  delay(2000);
-  wheel_test(dc, 128);
+//  wheel_test(dc, 255);
+//  delay(2000);
+//  wheel_test(dc, 128);
+  dc.forward(255);
+  delay(5000);
+  dc.stop();
 }
 
 
