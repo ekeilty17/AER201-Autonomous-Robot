@@ -4828,6 +4828,8 @@ void putch(char data);
 
 int atohtoi(unsigned char ascii);
 
+int keypad_total(unsigned char first, unsigned char second);
+
 int time_elapsed(unsigned char begin_min, unsigned char begin_sec,unsigned char end_min,unsigned char end_sec, int*array);
 # 23 "main.c" 2
 # 37 "main.c"
@@ -4840,6 +4842,15 @@ int total_cracks = 0;
 int total_holes = 0;
 float crack_dist[50];
 float hole_dist[50];
+
+
+const char keys[] = "123A456B789C*0#D";
+unsigned char first_digit = 20;
+unsigned char second_digit = 20;
+int total_cones;
+
+
+unsigned char status = 'N';
 
 const char reset[7] = {
     0x00,
@@ -4873,7 +4884,31 @@ void main(void) {
     cursor_reset();
 
 
-    unsigned char data;
+
+
+    long baudRate = 9600;
+    SPBRG = (unsigned char)((40000000 / (64 * baudRate)) - 1);
+
+
+    TXSTAbits.TX9 = 0;
+    TXSTAbits.SYNC = 0;
+    TXSTAbits.TXEN = 1;
+    _delay((unsigned long)((5)*(40000000/4000.0)));
+
+
+    RCSTAbits.RX9 = 0;
+    RCSTAbits.CREN = 1;
+
+
+    TRISCbits.TRISC6 = 0;
+    TRISCbits.TRISC7 = 1;
+
+
+    RCSTAbits.SPEN = 1;
+
+
+    PIE1bits.RCIE = 1;
+
 
 
 
@@ -4933,6 +4968,34 @@ void main(void) {
     clear();
 
 
+    while(1){
+        if(key_pressed){
+            key_pressed = 0;
+
+
+            unsigned char keypress = (PORTB & 0xF0) >> 4;
+            if (keys[keypress] == 'A'){
+                break;
+            }
+            if (first_digit == 20){
+                first_digit = keypress;
+            }
+            if (first_digit != 20){
+                second_digit = keypress;
+            }
+            printf("%x",keys[keypress]);
+            total_cones = keypad_total(first_digit, second_digit);
+
+             while(!TXIF | !TRMT){
+                continue;
+             }
+
+            TXREG = total_cones;
+            _delay((unsigned long)((1000)*(40000000/4000.0)));
+        }
+    }
+
+
 
     I2C_Master_Start();
     I2C_Master_Write(0b11010000);
@@ -4947,42 +5010,35 @@ void main(void) {
     I2C_Master_Stop();
 
 
-    I2C_Master_Start();
-    I2C_Master_Write(0b00010000);
-    I2C_Master_Write('A');
-    I2C_Master_Stop();
+
+
+
+    while(!TXIF | !TRMT){
+        continue;
+    }
+
+    TXREG = 'A';
+    _delay((unsigned long)((1000)*(40000000/4000.0)));
 
 
     LATAbits.LATA2 = 1;
     INTCONbits.RBIE = 1;
 
+
+
     while(1){
 
-        I2C_Master_Start();
-        I2C_Master_Write(0b00010000);
-        I2C_Master_Write(distance_travelled);
-        I2C_Master_Stop();
 
 
-        I2C_Master_Start();
-        I2C_Master_Write(0b00010001);
-        data = I2C_Master_Read(1);
-        I2C_Master_Stop();
 
-
-        if (data == 'H'){
-            LATAbits.LATA0 = 1;
-            _delay((unsigned long)((1000)*(40000000/4000.0)));
-            LATAbits.LATA0 = 0;
-        }
-        if (data == 'C'){
-            LATAbits.LATA1 = 1;
-            _delay((unsigned long)((1000)*(40000000/4000.0)));
-            LATAbits.LATA1 = 1;
+        while(!TXIF | !TRMT){
+            continue;
         }
 
+        TXREG = distance_travelled;
 
-        if (data == 'A'){
+
+        if (status == 'A'){
             break;
         }
     }
@@ -5003,37 +5059,6 @@ void main(void) {
     int op_time[2];
     time_elapsed(begin_min, begin_sec, end_min, end_sec, op_time);
 
-
-    while(1){
-
-        I2C_Master_Start();
-        I2C_Master_Write(0b00010001);
-        data = I2C_Master_Read(1);
-        I2C_Master_Stop();
-        if (data_count == 0){
-            total_cones = data;
-            data_count++;
-        }
-        else if (data_count == 1){
-            total_cracks = data;
-            data_count++;
-        }
-        else if (data_count == 2){
-            total_holes = data;
-            data_count++;
-        }
-        else if (data_count >= 3 && data_count < (total_cracks+3)){
-            crack_dist[data_count-3] = data;
-            data_count++;
-        }
-        else if (data_count >= (3+total_cracks) && data_count < (total_cracks+total_holes+3)){
-            hole_dist[data_count-(3+total_cracks)] = data;
-            data_count++;
-        }
-        else if (data_count >= (total_cracks+total_holes+3)){
-            break;
-        }
-    }
 
 
     LATAbits.LATA2 = 0;
@@ -5143,5 +5168,5 @@ void __attribute__((picinterrupt(("")))) interruptHandler(void){
        distance_travelled = distance_travelled + 1.06103295395;
        INT0IF = 0;
     }
-    INTCONbits.GIE = 1;
+# 413 "main.c"
 }

@@ -4598,6 +4598,8 @@ char *tempnam(const char *, const char *);
 
 int atohtoi(unsigned char ascii);
 
+int keypad_total(unsigned char first, unsigned char second);
+
 int time_elapsed(unsigned char begin_min, unsigned char begin_sec,unsigned char end_min,unsigned char end_sec, int*array);
 # 10 "timer.c" 2
 # 1 "./configure.h" 1
@@ -4684,6 +4686,12 @@ int atohtoi(unsigned char ascii){
    else{
      return -1;
    }
+}
+
+int keypad_total(unsigned char first, unsigned char second){
+    int first_int = (int)first;
+    int second_int = (int)second;
+    return first_int*10+second_int;
 }
 
 

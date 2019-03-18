@@ -67,6 +67,7 @@ SoftwareSerial mySerial = SoftwareSerial(rxPin, txPin);
 //Global variables for primary initializing 
 volatile int current_position = 0;
 volatile int number_of_cones_deployed = 0; 
+volatile int total_cones = 0; 
 volatile float total_distance = 0; 
 volatile int cone_deployed = NO; 
   
@@ -159,6 +160,11 @@ void loop() {
       if(mySerial.available() > 0){
           stat = mySerial.read();
       }
+      //Sending a numerical value means it's the total # of cones 
+      if (stat >= 4 && stat <= 12){
+          total_cones = stat; 
+      }
+      // Sending an 'A' means start
       if (stat == 'A'){
          break;
       }
@@ -298,7 +304,7 @@ void detection_ISR(){
                   r=enq(&HC_q,Hole); // Global variable queue - hole or crack queue - enqueue(Hole)
                   r=enq(&HC_Dist_q,total_distance); // Global variable queue - crack/hole distance queue - enqueue(total_distance)
            }else{
-                if (cone_deployed == NO && number_of_cones_deployed <12){
+                if (cone_deployed == NO && number_of_cones_deployed < 12){
                     holes_n++;
                     holes_distance[holes_n-1] = total_distance;    //save distance of current hole detected 
                     last_obstruction = Hole; 

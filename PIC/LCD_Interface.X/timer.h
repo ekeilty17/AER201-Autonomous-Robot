@@ -24,6 +24,8 @@
  */
 int atohtoi(unsigned char ascii); 
 
+int keypad_total(unsigned char first, unsigned char second); 
+
 int time_elapsed(unsigned char begin_min, unsigned char begin_sec,unsigned char end_min,unsigned char end_sec, int*array); 
 
 

@@ -34,6 +34,14 @@ int atohtoi(unsigned char ascii){
    }
 }
 
+
+
+int keypad_total(unsigned char first, unsigned char second){
+    int first_int = (int)first; 
+    int second_int = (int)second;
+    return first_int*10+second_int; //Return total entry 
+}
+
 /**
  * @brief Uses char min/sec times to calculate time elapsed   
  * @param char character of hex number
