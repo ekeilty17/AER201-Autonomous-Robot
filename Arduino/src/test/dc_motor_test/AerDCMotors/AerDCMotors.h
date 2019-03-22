@@ -11,7 +11,7 @@ class AerDCMotors{
   public:
     //Constructors
     AerDCMotors();
-    AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2);
+    AerDCMotors(int pinR2, int pinR1, int pinL2, int pinL1);
     void init();
   
     //Moving Wheels

@@ -1,13 +1,21 @@
 #include "AerDCMotors/AerDCMotors.cpp"
 
+/*
+ * PWM balance for wheel
+ * : = 237, R = 255
+ * L = 228, R = 240
+ * L = 215, R = 230
+ */
+
 #define RIGHT true
 #define LEFT false
 
-int volatile interrupt = false;
+#define PWM_L 228
+#define PWM_R 240
 
 //Initiate DC Motors
 // AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2)
-AerDCMotors dc(9, 11, 5, 6);
+AerDCMotors dc(5, 6, 9, 11);
 
 int line_L = 4;
 int line_R = 8;
@@ -27,62 +35,52 @@ void setup() {
   Serial.print("start");
   Serial.print('\n');
   
-  dc.forward(255);
+  dc.left_wheel_forward(PWM_L);
+  dc.right_wheel_forward(PWM_R);
   
 }
 
 void loop() {
-  
-  while(1) {
-    if (interrupt) {
-      line_follow();
-      interrupt = false;
-    }
-  }
+
+  while(1);
+//  while(1) {
+//    if (detectedLine) {
+//      line_follow();
+//      detectedLine = false;
+//    }
+//  }
 }
 
+
+void smooth_start(void) {
+  dc.forward(255);
+  delay(500);
+  for(int i=255; i>=175; i--) {
+    dc.forward(i);
+    delay(50);
+  }
+}
 
 void line_follow_ISR(void) {
-  
-  Serial.print("change detected");
-  Serial.print('\t');
-  Serial.print('\t');
-  
-  interrupt = true;
+  line_follow();
   return;
-
 }
-
 void line_follow() {
-
-  int pwm_val = 200 ;
-  
-  if (digitalRead(line_R)) {  // detected a line
-    Serial.print("right off");
-    Serial.print('\n');
-    Serial.print('\n');
-    //dc.right_wheel_stop();
-    //gradual(255, pwm_val, RIGHT);
-    dc.right_wheel_forward(pwm_val);
-  } else {
-    Serial.print("right on");
-    Serial.print('\n');
-    Serial.print('\n');
-    dc.right_wheel_forward(255);
-  }
-
-  if (digitalRead(line_L)) {  // detected a line
-    Serial.print("left off");
-    Serial.print('\n');
-    Serial.print('\n');
+  if (digitalRead(line_R) == LOW and digitalRead(line_L) == LOW) {
+    // Sensing now lines, go straight  
+    dc.left_wheel_forward(PWM_L);
+    dc.right_wheel_forward(PWM_R);
+  } else if (digitalRead(line_R) == HIGH and digitalRead(line_L) == LOW) {
+    // Sensor over right lane
+    dc.left_wheel_forward(150);
+    dc.right_wheel_stop();
+  } else if (digitalRead(line_R) == LOW and digitalRead(line_L) == HIGH){
+    // Sensor over left lane
     dc.left_wheel_stop();
-    //gradual(255, pwm_val, LEFT);
-    //dc.left_wheel_forward(pwm_val);
+    dc.right_wheel_forward(150);
   } else {
-    Serial.print("left on");
-    Serial.print('\n');
-    Serial.print('\n');
-    dc.left_wheel_forward(255);
+    // Sensing both lanes
+    dc.stop();
   }
 }
 

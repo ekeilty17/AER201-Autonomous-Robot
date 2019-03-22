@@ -3,8 +3,9 @@
 #define RIGHT true
 #define LEFT false
 //Initiate DC Motors
-// AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2)
-AerDCMotors dc(9, 11, 5, 6);
+// AerDCMotors(int pinR2, int pinR1, int pinL2, int pinL1)
+//    as in the order it goes on the integrated H-bridge
+AerDCMotors dc(5, 6, 9, 11);
 
 void setup() {
   // Initialize DC Motors
@@ -12,12 +13,19 @@ void setup() {
 }
 
 void loop() {
+
+  dc.forward(255);
+  delay(2000);
+  dc.stop();
+
+  while(1);
+
 //  wheel_test(dc, 255);
 //  delay(2000);
 //  wheel_test(dc, 128);
-  dc.forward(255);
-  delay(5000);
-  dc.stop();
+//  dc.forward(255);
+//  delay(5000);
+//  dc.stop();
 }
 
 

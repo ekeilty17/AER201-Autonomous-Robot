@@ -4,7 +4,7 @@
 //Constructors
 AerDCMotors :: AerDCMotors(){
 }
-AerDCMotors :: AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2){
+AerDCMotors :: AerDCMotors(int pinR2, int pinR1, int pinL2, int pinL1){
     _pinL1 = pinL1;
     _pinL2 = pinL2;
     _pinR1 = pinR1;
@@ -63,24 +63,26 @@ void AerDCMotors :: right_wheel_stop() {
 
 //Moving Robot (simple)
 void AerDCMotors :: forward(int pwm_val) {
+    /*
+     this -> left_wheel_forward(pwm_val);
+     this -> right_wheel_forward(pwm_val);
+     */
+    
     analogWrite(_pinL1, pwm_val);
     digitalWrite(_pinL2, LOW);
     analogWrite(_pinR1, pwm_val);
     digitalWrite(_pinR2, LOW);
-    /*
-    this -> left_wheel_forward(pwm_val);
-    this -> right_wheel_forward(pwm_val);
-     */
 }
 void AerDCMotors :: backward(int pwm_val) {
+    /*
+     this -> left_wheel_backward(pwm_val);
+     this -> right_wheel_backward(pwm_val);
+     */
+    
     digitalWrite(_pinL1, LOW);
     analogWrite(_pinL2, pwm_val);
     digitalWrite(_pinR1, LOW);
     analogWrite(_pinR2, pwm_val);
-    /*
-    this -> left_wheel_backward(pwm_val);
-    this -> right_wheel_backward(pwm_val);
-     */
 }
 void AerDCMotors :: stop() {
     digitalWrite(_pinL1,LOW);

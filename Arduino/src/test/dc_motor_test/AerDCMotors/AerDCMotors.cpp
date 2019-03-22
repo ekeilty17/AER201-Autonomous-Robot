@@ -4,7 +4,7 @@
 //Constructors
 AerDCMotors :: AerDCMotors(){
 }
-AerDCMotors :: AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2){
+AerDCMotors :: AerDCMotors(int pinR2, int pinR1, int pinL2, int pinL1){
     _pinL1 = pinL1;
     _pinL2 = pinL2;
     _pinR1 = pinR1;
