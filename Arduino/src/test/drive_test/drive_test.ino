@@ -10,16 +10,17 @@
 #define RIGHT true
 #define LEFT false
 
-#define PWM_L 228
-#define PWM_R 240
+#define PWM_L     150
+#define PWM_R     168
+#define PWM_ADJ   120
 
 //Initiate DC Motors
 // AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2)
 AerDCMotors dc(5, 6, 9, 11);
 
-int line_L = 4;
-int line_R = 8;
-int line_interr = 3;
+int line_L = 18;      // A4
+int line_R = 19;      // A5
+int line_interr = 2;
 
 void setup() {
   // Initialize DC Motors
@@ -52,10 +53,10 @@ void loop() {
 }
 
 
-void smooth_start(void) {
+void smooth_start(int pwm_val) {
   dc.forward(255);
   delay(500);
-  for(int i=255; i>=175; i--) {
+  for(int i=255; i>=pwm_val; i--) {
     dc.forward(i);
     delay(50);
   }
@@ -66,18 +67,19 @@ void line_follow_ISR(void) {
   return;
 }
 void line_follow() {
+  Serial.print("Entered ISR");
   if (digitalRead(line_R) == LOW and digitalRead(line_L) == LOW) {
     // Sensing now lines, go straight  
     dc.left_wheel_forward(PWM_L);
     dc.right_wheel_forward(PWM_R);
   } else if (digitalRead(line_R) == HIGH and digitalRead(line_L) == LOW) {
     // Sensor over right lane
-    dc.left_wheel_forward(150);
+    dc.left_wheel_forward(PWM_ADJ);
     dc.right_wheel_stop();
   } else if (digitalRead(line_R) == LOW and digitalRead(line_L) == HIGH){
     // Sensor over left lane
     dc.left_wheel_stop();
-    dc.right_wheel_forward(150);
+    dc.right_wheel_forward(PWM_ADJ);
   } else {
     // Sensing both lanes
     dc.stop();
@@ -107,44 +109,6 @@ void gradual(int pwm_start, int pwm_end, int isRight) {
     }
   }
 }
-
-/*
-void line_follow() {
-  Serial.print(sensors);
-  Serial.print('\t');
-  switch(sensors) {
-      case 0:   // both sensors on either side of line
-        Serial.print("both on");
-        Serial.print('\n');
-        Serial.print('\n');
-        dc.forward(255);
-        break;
-      case 1:   // right sensor reads line
-        Serial.print("right off");
-        Serial.print('\n');
-        Serial.print('\n');
-        dc.left_wheel_forward(255);
-        dc.right_wheel_stop();
-        break;
-      case 10:  // left sensor reads line
-        Serial.print("left off");
-        Serial.print('\n');
-        Serial.print('\n');
-        dc.left_wheel_stop();
-        dc.right_wheel_forward(255);
-        break;
-      case 11:  // both sensors read lines
-        //dc.stop();
-        Serial.print("both off");
-        Serial.print('\n');
-        Serial.print('\n');
-        dc.stop();
-        break;
-      default:
-        break;
-    }
-}
-*/
 
 void sensor_test(int sensor) {
   if (sensor == line_R) {

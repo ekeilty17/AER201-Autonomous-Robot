@@ -40,17 +40,21 @@ void AerServo :: stop() {
 }
 
 //Relative Displacement
-void AerServo :: displace_right(float dx) {
+float AerServo :: displace_right(float dx) {
   this -> move_right();
   int t = (int) (dx * 1000) / _velocity_r;
   delay(t);
   this -> stop();
+  _curr_pos -= dx;
+  return _curr_pos;
 }
-void AerServo :: displace_left(float dx) {
+float AerServo :: displace_left(float dx) {
   this -> move_left();
   int t = (int) (dx * 1000) / _velocity_l;
   delay(t);
   this -> stop();
+  _curr_pos -= dx;
+  return _curr_pos;
 }
 
 // Moving to specific positions
@@ -61,28 +65,40 @@ float AerServo :: move_to(float x) {
     this -> displace_left(_curr_pos - x);
   }
   _curr_pos = x;
-  delay(500);
   return _curr_pos;
 }
-float AerServo :: middle() {
+float AerServo :: move_to_time(int t) {
+    if (t > 0) {
+        this -> move_right();
+        delay(t);
+        this -> stop();
+    } else {
+        this -> move_left();
+        delay(-t);
+        this -> stop();
+    }
+}
+float AerServo :: to_middle() {
   this -> move_to(8.5);
   return 8.5;
 }
 float AerServo :: hard_left() {
-  this -> move_to(0 - 2);   //over shoot to ensure it's flush
+  this -> move_to(0 - 6);   //over shoot to ensure it's flush
   _curr_pos = 0;
   return 0;
 }
 float AerServo :: hard_right() {
-  this -> move_to(17 + 2);  //over shoot to ensure it's flush
+  this -> move_to(17 + 4);  //over shoot to ensure it's flush
   _curr_pos = 17;
   return 17;
 }
-void AerServo :: reset(){
-  if (_curr_pos < 8.5) {
+float AerServo :: reset(){
+  if (_curr_pos < 9.5) {
     this -> hard_left();
   } else {
     this -> hard_right();
   }
-  this -> middle();
+  this -> to_middle();
+  _curr_pos = 8.5;
+  return 8.5;
 }

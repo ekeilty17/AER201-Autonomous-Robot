@@ -86,6 +86,7 @@ void loop() {
       Serial.print("\n");
       
       cone_deployment();
+      attachInterrupt(digitalPinToInterrupt(SENSOR_CENTRE), detection_ISR, CHANGE);
       
       Serial.print("done deployment");
       Serial.print("\n");
@@ -98,57 +99,38 @@ void loop() {
 //Interrupt sequence if cone detected
 unsigned long lastInterrupt = 0;
 void detection_ISR(){
-
-  // To prevent repeated input due to bad sensor signal
-  if (millis() - lastInterrupt > 200) {
-    
-    Serial.print("\n");
-    Serial.print("Entered ISR");
-    Serial.print("\n");
-    
-    //int obstruction = 100*digitalRead(SENSOR_RIGHT) + 10*digitalRead(SENSOR_CENTRE) + digitalRead(SENSOR_LEFT);
-    int obstruction = 0;
-    if (digitalRead(SENSOR_CENTRE) == LOW) {
-      return;
-    } else if (digitalRead(SENSOR_RIGHT) == HIGH and digitalRead(SENSOR_LEFT) == HIGH) {
-      // Center Crack
-      obstruction = 111;
-    } else if (digitalRead(SENSOR_RIGHT) == HIGH) {
-       // Right Crack
-       obstruction = 110;
-    } else if (digitalRead(SENSOR_LEFT) == HIGH) {
-      // Left Crack
-      obstruction = 11;
-    } else if (digitalRead(SENSOR_RIGHT) == LOW and digitalRead(SENSOR_LEFT) == LOW) {
-      // Hole
-      obstruction = 10;
-    } else {
-      // idk
-      return;
-    }
-    
-    HC_q.enq(obstruction);
-    HC_Dist_q.enq(curr_pos);
   
-    Serial.print("Detected: ");
-    Serial.print(obstruction);
-    Serial.print(" at location ");
-    Serial.print(curr_pos);
-    Serial.print("\t");
+  Serial.print("\n");
+  Serial.print("Entered ISR");
+  Serial.print("\n");
+  
+  int obstruction = 100*digitalRead(SENSOR_RIGHT) + 10*digitalRead(SENSOR_CENTRE) + digitalRead(SENSOR_LEFT);
+  if (obstruction == 0) {
+    return;
+  }
+
+  // Turn off interrupts
+  detachInterrupt(digitalPinToInterrupt(SENSOR_CENTRE));
+  
+  HC_q.enq(obstruction);
+  HC_Dist_q.enq(curr_pos);
+
+  Serial.print("Detected: ");
+  Serial.print(obstruction);
+  Serial.print(" at location ");
+  Serial.print(curr_pos);
+  Serial.print("\t");
 
   // Printing Queue
-//    int *q = HC_q.getQueue();
-//    for (int i=0; i<HC_q.getSize(); i++) {
-//      Serial.print(q[i]);
-//      Serial.print(" ");
-//    }
-//    Serial.print("\t");
-//    Serial.print("'HC_q.isEmpty()' = ");
-//    Serial.print(HC_q.isEmpty());
-//    Serial.print("\n");
-  }
-  lastInterrupt = millis();
-  
+//  int *q = HC_q.getQueue();
+//  for (int i=0; i<HC_q.getSize(); i++) {
+//    Serial.print(q[i]);
+//    Serial.print(" ");
+//  }
+//  Serial.print("\t");
+//  Serial.print("'HC_q.isEmpty()' = ");
+//  Serial.print(HC_q.isEmpty());
+//  Serial.print("\n");
   return;
 }
 

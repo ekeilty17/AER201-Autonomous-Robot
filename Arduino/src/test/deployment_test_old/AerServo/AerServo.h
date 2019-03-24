@@ -40,7 +40,7 @@ class AerServo : public Servo {
 
     // Moving to specific positions
     float move_to(float x);
-    float move_to_time(int t);
+    float move_to_manual(float x);
     float to_middle();
     float hard_left();
     float hard_right();

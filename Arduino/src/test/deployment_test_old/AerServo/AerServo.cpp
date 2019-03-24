@@ -67,28 +67,20 @@ float AerServo :: move_to(float x) {
   _curr_pos = x;
   return _curr_pos;
 }
-float AerServo :: move_to_time(int t) {
-    if (t > 0) {
-        this -> move_right();
-        delay(t);
-        this -> stop();
-    } else {
-        this -> move_left();
-        delay(-t);
-        this -> stop();
-    }
+float AerServo :: move_to_manual(float x) {
+    return 10.0;
 }
 float AerServo :: to_middle() {
   this -> move_to(8.5);
   return 8.5;
 }
 float AerServo :: hard_left() {
-  this -> move_to(0 - 6);   //over shoot to ensure it's flush
+  this -> move_to(0 - 2);   //over shoot to ensure it's flush
   _curr_pos = 0;
   return 0;
 }
 float AerServo :: hard_right() {
-  this -> move_to(17 + 4);  //over shoot to ensure it's flush
+  this -> move_to(17 + 2);  //over shoot to ensure it's flush
   _curr_pos = 17;
   return 17;
 }

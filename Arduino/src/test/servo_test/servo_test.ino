@@ -12,21 +12,8 @@ void setup() {
 
 void loop() {
 
-//  servo.setCurr_pos(19.0); 
-//  servo.hard_left();
-  delay(2000); 
-  servo.move_right();
-  delay(1000);
-  servo.stop();
-  delay(1000);
-  servo.move_left();
-  delay(1000);
-  servo.stop();
-
-//  delay(1000);
-//  servo.displace_right(10);
-  //displacement_test(servo, 1200, RIGHT);
-//  self_consistency_test(servo, 10, LEFT);
+  servo.setCurr_pos(8.5);
+  centre_crack_deploy();
   
   while(1); 
 
@@ -60,4 +47,45 @@ void self_consistency_test(AerServo servo, int n, bool start_right) {
       delay(500);
     }
   }
+}
+
+
+void hole_deploy() {
+  servo.to_middle();
+  delay(1000);
+  return;
+}
+void left_crack_deploy() {
+  // Cone 1
+  //servo.hard_left();
+  servo.move_to_time(300);
+  delay(1000);
+  // Cone 2
+  servo.move_to_time(1600);
+  delay(1000);
+  servo.setCurr_pos(10);
+}
+void right_crack_deploy() {
+  // Cone 1
+  //servo.hard_right();
+  servo.move_to_time(-400);
+  delay(1000);
+  // Cone 2
+  servo.move_to_time(-2100);
+  delay(1000);
+  servo.setCurr_pos(7);
+}
+void centre_crack_deploy() {
+  // Cone 1
+  servo.move_to_time(-2000);
+  servo.move_to_time(700);
+  delay(1000);
+  // Cone 2
+  servo.move_to_time(4500);
+  servo.move_to_time(-800);
+  delay(1000);
+  servo.setCurr_pos(13);
+}
+void center_crack_deploy() {
+  centre_crack_deploy();
 }
