@@ -16,6 +16,7 @@
 // Includes
 #include <SoftwareSerial.h>
 #include "AerServo/AerServo.cpp"
+#include "AerServo/Servo2.cpp"
 #include "AerSteppers/AerSteppers.cpp"
 #include "AerDCMotors/AerDCMotors.cpp"
 #include "Queue/Queue.cpp"
@@ -34,33 +35,44 @@
 #define CENTER_CRACK      111
 
 //Line Following Sensors Definitions
-#define line_L              18    // A4
-#define line_R              19    // A5
+#define line_L             18    // A4
+#define line_R             19    // A5
 #define line_interr         2     // Interrupt pin
 
-/*
+//Convert Rotary Encoder ticks to distance traveled
+#define DISTANCE_CONVERSION 1
+
 // Full Batteries
-#define PWM_L     150
-#define PWM_R     168
-#define PWM_ADJ   120
-*/
+#define PWM_L     180
+#define PWM_R     180
+#define PWM_ADJ   150
+/*
 // Half Dead Batteries
 #define PWM_L     215
 #define PWM_R     230
 #define PWM_ADJ   170
+*/
 
 //Read-only (Arduino-PIC Comm)
 const byte rxPin = 1;
 const byte txPin = 0; 
+volatile int stat = 0;
 
 //Global variables for primary initializing 
 volatile int curr_pos = 0;
+volatile int total_number_of_cones = 13;
 volatile int number_of_cones_deployed = 0;
 
 //Detection ISR Variables 
 volatile bool isDeploying = false;
 volatile int last_obstruction[2] = {0, 0};
 volatile bool isPreviouslyDeployed = false;
+
+//Data to send to PIC at end of operation
+volatile int holes[20];
+volatile int hole_num = 0;
+volatile int cracks[20];
+volatile int crack_num = 0;
 
 //Cone Deployment Functions
 void detection_ISR();
@@ -95,9 +107,12 @@ AerServo servo(10);
 AerSteppers stepp(14, 15, 16, 17); 
 
 void setup() {
+
   // Initialize internal variables of classes
   dc.init();
+  dc.stop();
   servo.init(); 
+  servo.stop();
   servo.setCurr_pos(8.5);
   stepp.init();
   HC_q.init();
@@ -106,7 +121,27 @@ void setup() {
   pinMode(rxPin, INPUT);
   pinMode(txPin, OUTPUT); 
   mySerial.begin(9600); 
+
+  // Getting starting instruction
+  while (1) {
+    if (mySerial.available() > 0) {
+      stat = mySerial.read();
+    }
+
+    if (4 <= stat and stat <= 12) {
+      total_number_of_cones = (int) stat;
+    }
   
+    if (stat == 100) {
+      if (4 <= total_number_of_cones and total_number_of_cones <= 12) {
+        break;
+      } else {
+        // Not sure if we want to account for this case
+        while(1);
+      }
+    }
+  }
+
   //Set Interrupt pins
   pinMode(SENSOR_CENTRE, INPUT);
   attachInterrupt(digitalPinToInterrupt(SENSOR_CENTRE), detection_ISR, CHANGE);
@@ -116,10 +151,7 @@ void setup() {
   pinMode(line_interr, INPUT);
   attachInterrupt(digitalPinToInterrupt(line_interr),line_follow_ISR,CHANGE);
   
-  Serial.begin(9600);
-  Serial.print("start");
-  Serial.print("\n");
-  Serial.print("\n");
+  delay(1000);
 
   // Operations begin by robot moving forward
   dc.left_wheel_forward(PWM_L);
@@ -128,16 +160,18 @@ void setup() {
 }
 
 void loop() {
-  while (1){
 
-    /*
+  // Core operations
+  while(1) {
     if (mySerial.available() > 0) {
-      curr_pos = mySerial.read();
+       curr_pos =  mySerial.read() * DISTANCE_CONVERSION;
     }
-    */
     
-    // For testing purposes
-    curr_pos += 5;
+    if (number_of_cones_deployed >= total_number_of_cones or curr_pos >= 4000000000) {
+      dc.stop();
+      mySerial.write('A');
+      break;
+    }
     
     if (HC_q.isEmpty() == false){
       isDeploying = true;
@@ -145,6 +179,25 @@ void loop() {
       isDeploying = false;
     }
   }
+
+  // Returning to startline
+  while(1) {
+    dc.uturn_right(255, 255, 255);
+    dc.left_wheel_forward(PWM_L);
+    dc.right_wheel_forward(PWM_R);
+    curr_pos = 0;
+    dc.left_wheel_forward(PWM_L);
+    dc.right_wheel_forward(PWM_R);
+    while (curr_pos < 400) {
+      curr_pos =  mySerial.read() * DISTANCE_CONVERSION;
+    }
+    dc.uturn_right(255, 255, 255);
+    dc.stop();
+    break;
+  }
+
+  while(1);
+  
 }
 
 /* Cone Deployment Functions */
@@ -154,9 +207,12 @@ void detection_ISR(){
   // To prevent repeated input due to bad sensor signal
   if (millis() - lastInterrupt > 200) {
     
-    Serial.print("\n");
-    Serial.print("Entered ISR");
-    Serial.print("\n");
+    // Updating curr_pos to get accurate location of obstruction
+    /*
+    if (mySerial.available() > 0) {
+      curr_pos = mySerial.read();
+    }
+    */
     
     //int obstruction = 100*digitalRead(SENSOR_RIGHT) + 10*digitalRead(SENSOR_CENTRE) + digitalRead(SENSOR_LEFT);
     int obstruction = 0;
@@ -165,25 +221,27 @@ void detection_ISR(){
     } else if (digitalRead(SENSOR_RIGHT) == HIGH and digitalRead(SENSOR_LEFT) == HIGH) {
       // Center Crack
       obstruction = 111;
+      cracks[crack_num] = curr_pos;
       mySerial.write('C'); 
     } else if (digitalRead(SENSOR_RIGHT) == HIGH) {
        // Right Crack
        obstruction = 110;
+       cracks[crack_num] = curr_pos;
        mySerial.write('C'); 
     } else if (digitalRead(SENSOR_LEFT) == HIGH) {
       // Left Crack
       obstruction = 11;
+      cracks[crack_num] = curr_pos;
       mySerial.write('C'); 
     } else if (digitalRead(SENSOR_RIGHT) == LOW and digitalRead(SENSOR_LEFT) == LOW) {
       // Hole
       obstruction = 10;
+      holes[hole_num] = curr_pos;
       mySerial.write('H');
     } else {
       // idk
       return;
     }
-    Serial.print("Sent to PIC");
-    Serial.print("\n");
     
     dc_stop();
     HC_q.enq(obstruction);
@@ -199,7 +257,7 @@ void dc_stop() {
 }
 
 void cone_deployment(){
-
+  
   isDeploying = false;
   dc.left_wheel_forward(PWM_L);
   dc.right_wheel_forward(PWM_R);
@@ -216,22 +274,26 @@ void cone_deployment(){
     switch(obstruction) {
       case HOLE:
         hole_deploy();
+        number_of_cones_deployed += 1;
         break;
       case LEFT_CRACK:
         left_crack_deploy();
+        number_of_cones_deployed += 2;
         break;
       case RIGHT_CRACK:
         right_crack_deploy();
+        number_of_cones_deployed += 2;
         break;
       case CENTRE_CRACK:
         centre_crack_deploy();
+        number_of_cones_deployed += 2;
         break;
       default:
         break;
     }
-
+    
     // putting servo in neutral position
-    servo.to_middle();
+    //servo.to_middle();
     
   }
   
@@ -290,8 +352,9 @@ void left_crack_deploy() {
   servo.move_to_time(300);
   stepp.drop_cone();
   // Cone 2
-  servo.move_to_time(1600);
+  servo.move_to_time(1500);
   stepp.drop_cone();
+  // Move back to center
   servo.setCurr_pos(10);
 }
 void right_crack_deploy() {
@@ -307,11 +370,11 @@ void right_crack_deploy() {
 void centre_crack_deploy() {
   // Cone 1
   servo.move_to_time(-2500);
-  servo.move_to_time(700);
+  servo.move_to_time(600);
   stepp.drop_cone();
   // Cone 2
-  servo.move_to_time(4000);
-  servo.move_to_time(-800);
+  servo.move_to_time(3500);
+  servo.move_to_time(-500);
   stepp.drop_cone();
   servo.setCurr_pos(13);
 }

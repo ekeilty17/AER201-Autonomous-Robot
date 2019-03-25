@@ -10,9 +10,9 @@
 #define RIGHT true
 #define LEFT false
 
-#define PWM_L     150
-#define PWM_R     168
-#define PWM_ADJ   120
+#define PWM_L     170
+#define PWM_R     170
+#define PWM_ADJ   150
 
 //Initiate DC Motors
 // AerDCMotors(int pinL1, int pinL2, int pinR1, int pinR2)

@@ -1,24 +1,33 @@
 #include "AerServo/AerServo.cpp"
+#include "AerServo/Servo2.cpp"
 
 #define RIGHT true
 #define LEFT false
 
 //Initiate Servo
 AerServo servo(10);
+//Servo servo;
 
 void setup() {
   servo.init();
+  //servo.attach(10);
 }
 
 void loop() {
 
+  servo.move_to_time(1000);
+  
+  /*
   servo.setCurr_pos(8.5);
-  centre_crack_deploy();
+  servo.move_right();
+  delay(1000);
+  servo.stop();
+  */
   
   while(1); 
 
 }
-
+/*
 void displacement_test(AerServo servo, int t, bool move_right) {
   if(move_right) {
     servo.move_right();
@@ -89,3 +98,4 @@ void centre_crack_deploy() {
 void center_crack_deploy() {
   centre_crack_deploy();
 }
+*/

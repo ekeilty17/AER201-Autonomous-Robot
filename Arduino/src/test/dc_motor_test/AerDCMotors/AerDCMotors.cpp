@@ -104,21 +104,29 @@ void AerDCMotors :: pivot_right(int pwm_val) {
     this -> left_wheel_forward(pwm_val);
     this -> right_wheel_backward(pwm_val);
 }
-void AerDCMotors :: u_turn_right() {
-    this -> pivot_right(255);
-    delay(0000);
-    this -> stop();
-    delay(000);
-    this -> forward(255);
-    delay(0000);
-    this -> stop();
-    delay(000);
-    this -> pivot_right(255);
-    delay(0000);
-    this -> stop();
-    delay(000);
+void AerDCMotors :: swing_left(int pwm_val) {
+    this -> left_wheel_stop();
+    this -> right_wheel_forward(pwm_val);
 }
-void AerDCMotors :: u_turn_left() {
+void AerDCMotors :: swing_right(int pwm_val) {
+    this -> left_wheel_forward(pwm_val);
+    this -> right_wheel_stop();
+}
+void AerDCMotors :: uturn_right() {
+    this -> swing_right(255);
+    delay(1500);
+    this -> stop();
+    delay(500);
+    this -> forward(255);
+    delay(3000);
+    this -> stop();
+    delay(500);
+    this -> swing_right(255);
+    delay(1500);
+    this -> stop();
+    delay(500);
+}
+void AerDCMotors :: uturn_left() {
     this -> pivot_left(255);
     delay(0000);
     this -> stop();

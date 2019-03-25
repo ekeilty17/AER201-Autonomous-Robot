@@ -30,8 +30,10 @@ class AerDCMotors{
     //Moving Robot (complex)
     void pivot_right(int pwm_val);
     void pivot_left(int pwm_val);
-    void u_turn_right();
-    void u_turn_left();
+    void swing_right(int pwm_val);
+    void swing_left(int pwm_val);
+    void uturn_right(int pwm_val_turn, int pwm_val_L, int pwm_val_R);
+    void uturn_left(int pwm_val_turn, int pwm_val_L, int pwm_val_R);
 };
 
 #endif  /* AERDCMOTORS_H */
