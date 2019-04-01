@@ -53,6 +53,7 @@ void AerSteppers :: full_drive () {
 }
   
 void AerSteppers :: drop_cone() {
+    delay(500);
     
     for(int i=0; i<64; i++) {
       full_drive();
@@ -65,6 +66,7 @@ void AerSteppers :: drop_cone() {
     digitalWrite(_pin2,LOW);
     digitalWrite(_pin3,LOW);
     digitalWrite(_pin4,LOW);
-
-    delay(1000);
+    
+    delay(500);
+    
 }

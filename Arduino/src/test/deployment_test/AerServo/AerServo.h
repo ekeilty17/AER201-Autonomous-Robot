@@ -1,7 +1,8 @@
 #ifndef AERSERVO_H
 #define AERSERVO_H
 
-#include <Servo.h>
+//#include <SoftwareSerial.h>
+#include "Servo2.h"
 
 class AerServo : public Servo {
   private:

@@ -13,10 +13,6 @@ AerServo :: AerServo(int pin, float curr_pos){
   _curr_pos = curr_pos;
 }
 void AerServo :: init() {
-  
-  //this -> _t_cleft = (int) this -> _t_left * (3 / 10);
-  //this -> _t_cright = (int) this -> _t_right * (3 / 10);
-  
   this -> attach(_pin);
 }
 
@@ -68,6 +64,7 @@ float AerServo :: move_to(float x) {
   return _curr_pos;
 }
 float AerServo :: move_to_time(int t) {
+    //this -> reattach();
     if (t > 0) {
         this -> move_right();
         delay(t);
@@ -77,6 +74,7 @@ float AerServo :: move_to_time(int t) {
         delay(-t);
         this -> stop();
     }
+    //this -> detach();
 }
 float AerServo :: to_middle() {
   this -> move_to(8.5);

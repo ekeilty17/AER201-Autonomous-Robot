@@ -1,31 +1,148 @@
 #include <SoftwareSerial.h>
+#include "AerDCMotors/AerDCMotors.cpp"
 
-int reL = 3;
-int reR = 3;
+//Convert Rotary Encoder ticks to distance traveled
+#define DISTANCE_CONVERSION 1
 
-float distance_travelled = 0.0;
+
+// Full Batteries
+#define PWM_L     170
+#define PWM_R     170
+#define PWM_ADJ_L 140
+#define PWM_ADJ_R 140
+/*
+// Half Dead Batteries
+#define PWM_L     200
+#define PWM_R     210
+#define PWM_ADJ   130
+*/
+
+//Arduino-PIC Comm
+const byte rxPin = 1;
+const byte txPin = 0; 
+volatile int stat = 0;
+
+//Arduino-PIC Comm
+SoftwareSerial mySerial = SoftwareSerial(rxPin, txPin); 
+
+AerDCMotors dc(5, 6, 9, 11);
+
+int line_L = 18;      // A4
+int line_R = 19;      // A5
+int line_interr = 2;
+
+volatile int curr_pos = 0;
+volatile bool isDeploying = false;
 
 void setup() {
-  pinMode(reL, INPUT);
-  pinMode(reR, INPUT);
-  //attachInterrupt(digitalPinToInterrupt(reL), Distance_ISR, FALLING);
-  attachInterrupt(digitalPinToInterrupt(reR), Distance_ISR, FALLING);
-  Serial.begin(9600);
+  // Initialize DC Motors
+  dc.init();
+  
+  //Arduino-PIC Comm
+  pinMode(rxPin, INPUT);
+  pinMode(txPin, OUTPUT); 
+  mySerial.begin(9600); 
+
+  // Initialize IR input sensor pins
+  pinMode(line_L,INPUT);
+  pinMode(line_R,INPUT);
+  pinMode(line_interr, INPUT);
+  attachInterrupt(digitalPinToInterrupt(line_interr),line_follow_ISR,CHANGE);
+  
+  dc.forward(PWM_L, PWM_R);
 }
 
 void loop() {
-  Serial.print(distance_travelled); 
-  Serial.print("\t");
-  delay(2000);
+
+  // Polling PIC for data from rotary encoders
+  curr_pos = get_rotary_encoder_data();
+  
+  if (curr_pos >= 1000) {
+    mySerial.write('A');
+    isDeploying = true;
+    dc.stop();
+    
+    
+    // Sending position data
+    char curr_pos_char[6];
+    dtostrf(curr_pos, 5, 0, curr_pos_char);
+    mySerial.write('P');
+    for (int i=0; i<5; i++) {
+      if (curr_pos_char[i] == ' ') {
+        mySerial.write('0');
+        wait();
+        continue;
+      }
+      mySerial.write(curr_pos_char[i]);
+      wait();
+    }
+    
+    
+    while(1) {
+      dc.stop();
+    }
+  }
+  
 }
 
-void Distance_ISR() {
-  //Check if right wheel rotary encoder interrupt enabled and flag raised 
-  if(digitalRead(reR)) {
-      distance_travelled += 0.1;
+int get_rotary_encoder_data() {
+  
+  int RE_right = -1;
+  mySerial.write('R');
+  while(RE_right == -1) {
+    if (mySerial.available() > 0) {
+      RE_right = mySerial.read();
+    }
   }
-//  //Check if left wheel rotary encoder interrupt enabled and flag raised 
-//  else if(digitalRead(reR)) {
-//     distance_travelled += 0.1;
-//  }
+  
+  int RE_left = -1;
+  mySerial.write('L');
+  while(RE_left == -1) {
+    if (mySerial.available() > 0) {
+      RE_left = mySerial.read();
+    }
+  }
+  return (RE_left << 8) | RE_right;
+  //return ((RE_left << 8) & 0xff00) | (RE_right & 0x00ff);
+}
+
+unsigned long lastInterrupt = 0;
+void line_follow_ISR(void) {
+  if (millis() - lastInterrupt > 200) {
+    line_follow();
+  }
+  lastInterrupt = millis();
+  //line_follow();
+  return;
+}
+void line_follow() {
+  if (isDeploying) {
+    dc.stop();
+    return;
+  }
+  if (digitalRead(line_R) == LOW and digitalRead(line_L) == LOW) {
+    // Sensing now lines, go straight  
+    dc.left_wheel_forward(PWM_L);
+    dc.right_wheel_forward(PWM_R);
+  } else if (digitalRead(line_R) == HIGH and digitalRead(line_L) == LOW) {
+    // Sensor over right lane
+    dc.left_wheel_forward(PWM_ADJ_L);
+    dc.right_wheel_stop();
+  } else if (digitalRead(line_R) == LOW and digitalRead(line_L) == HIGH){
+    // Sensor over left lane
+    dc.left_wheel_stop();
+    dc.right_wheel_forward(PWM_ADJ_R);
+  } else {
+    // Sensing both lanes
+    dc.stop();
+  }
+}
+
+void wait() {
+  while(stat != 'D') {
+    if (mySerial.available() > 0) {
+      stat = mySerial.read();
+    }
+  }
+  stat = '\0';
 }

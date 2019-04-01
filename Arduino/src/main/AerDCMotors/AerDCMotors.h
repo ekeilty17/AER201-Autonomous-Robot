@@ -23,7 +23,7 @@ class AerDCMotors{
     void right_wheel_stop();
 
     //Moving Robot (simple)
-    void forward(int pwm_val);
+    void forward(int pwm_val_L, int pwm_val_R);
     void backward(int pwm_val);
     void stop();
 

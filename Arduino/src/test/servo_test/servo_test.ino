@@ -10,7 +10,6 @@ AerServo servo(10);
 
 void setup() {
   servo.init();
-  //servo.attach(10);
 }
 
 void loop() {
