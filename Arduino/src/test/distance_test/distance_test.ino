@@ -7,7 +7,7 @@
 
 // Full Batteries
 #define PWM_L     170
-#define PWM_R     170
+#define PWM_R     195
 #define PWM_ADJ_L 140
 #define PWM_ADJ_R 140
 /*
@@ -49,40 +49,36 @@ void setup() {
   pinMode(line_interr, INPUT);
   attachInterrupt(digitalPinToInterrupt(line_interr),line_follow_ISR,CHANGE);
   
-  dc.forward(PWM_L, PWM_R);
+  
 }
 
 void loop() {
-
-  // Polling PIC for data from rotary encoders
-  curr_pos = get_rotary_encoder_data();
   
-  if (curr_pos >= 1000) {
-    mySerial.write('A');
-    isDeploying = true;
-    dc.stop();
-    
-    
-    // Sending position data
-    char curr_pos_char[6];
-    dtostrf(curr_pos, 5, 0, curr_pos_char);
-    mySerial.write('P');
-    for (int i=0; i<5; i++) {
-      if (curr_pos_char[i] == ' ') {
-        mySerial.write('0');
-        wait();
-        continue;
+  
+  dc.forward(PWM_L, PWM_R);
+  delay(1000);
+  dc.stop();
+  
+  detachInterrupt(digitalPinToInterrupt(line_interr));
+  while(1);
+  
+}
+
+void end_operations_test() {
+  while(1) {
+    // Polling PIC for data from rotary encoders
+    if (mySerial.available() > 0) {
+      stat =  mySerial.read();
+      if (stat == 'E') {
+        dc.stop();
+        detachInterrupt(digitalPinToInterrupt(line_interr));
+        break;
       }
-      mySerial.write(curr_pos_char[i]);
-      wait();
-    }
-    
-    
-    while(1) {
-      dc.stop();
+      
     }
   }
-  
+
+  while(1);
 }
 
 int get_rotary_encoder_data() {
