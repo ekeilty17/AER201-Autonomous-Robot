@@ -25,7 +25,8 @@ class AerDCMotors{
     //Moving Robot (simple)
     void forward(int pwm_val_L, int pwm_val_R);
     void backward(int pwm_val);
-    void stop();
+    void stop(int pwm_val_L, int pwm_val_R);
+    void gradual_stop(int pwm_val_L, int pwm_val_R);
 
     //Moving Robot (complex)
     void pivot_right(int pwm_val);

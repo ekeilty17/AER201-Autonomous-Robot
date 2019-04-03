@@ -42,8 +42,8 @@
 #define line_interr         2    // Interrupt pin
 
 // Full Batteries
-#define PWM_L     200
-#define PWM_R     225
+#define PWM_L     170
+#define PWM_R     200
 #define PWM_ADJ_L 170
 #define PWM_ADJ_R 170
 /*
@@ -97,7 +97,7 @@ void setup() {
 
   // Initialize internal variables of classes
   dc.init();
-  dc.stop();
+  dc.stop(PWM_L, PWM_R);
   
   servo.init(); 
   servo.stop();
@@ -166,7 +166,6 @@ void loop() {
     if (mySerial.available() > 0) {
       stat_char =  mySerial.read();
       if (stat_char == 'E') {
-        mySerial.write('A');
         break;
       }
     }
@@ -218,19 +217,23 @@ void loop() {
   
   // Clear any previously deployed cones
   dc.forward(PWM_L, PWM_R);
-  delay(3000);
-  dc.stop();
+  delay(1500);
+  dc.stop(PWM_L, PWM_R);
   delay(1000);
   
   // 180 degree turn
-  dc.uturn_right(255, 255, 255);
+  // uturn_right(int pwm_val_turn, int pwm_val_L, int pwm_val_R)
+  dc.uturn_right(225, PWM_L, PWM_R);
   
   // starting return trip
   dc.forward(PWM_L, PWM_R);
-  delay(10000);   // TODO figure out what this number has to be
+  delay(15000);
   
   // Turning off drive system motors and line following sensors
-  dc.stop();
+  dc.stop(PWM_L, PWM_R);
+
+  // Tell PIC operations are complete
+  mySerial.write('A');
   
   // Waiting idle
   while(1);
@@ -298,7 +301,7 @@ void detection_ISR(){
   return;
 }
 void dc_stop() {
-  dc.stop();
+  dc.stop(PWM_L, PWM_R);
 }
 
 
@@ -330,7 +333,7 @@ void cone_deployment(){
     delay(100);
     detectionSensorsOn = true;
     delay(900);
-    dc.stop();
+    dc.stop(PWM_L, PWM_R);
     isDeploying = true;
     
     switch(obstruction) {
@@ -432,6 +435,6 @@ void line_follow() {
     dc.right_wheel_forward(PWM_ADJ_R);
   } else {
     // Sensing both lanes
-    dc.stop();
+    dc.stop(PWM_L, PWM_R);
   }
 }

@@ -6,8 +6,8 @@
 
 
 // Full Batteries
-#define PWM_L     170
-#define PWM_R     195
+#define PWM_L     225
+#define PWM_R     255
 #define PWM_ADJ_L 140
 #define PWM_ADJ_R 140
 /*
@@ -56,7 +56,7 @@ void loop() {
   
   
   dc.forward(PWM_L, PWM_R);
-  delay(1000);
+  delay(4000);
   dc.stop();
   
   detachInterrupt(digitalPinToInterrupt(line_interr));
