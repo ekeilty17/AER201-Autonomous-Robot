@@ -54,10 +54,10 @@ void loop() {
 
 
 void smooth_start(int pwm_val) {
-  dc.forward(255);
+  dc.forward(255, 255, true);
   delay(500);
   for(int i=255; i>=pwm_val; i--) {
-    dc.forward(i);
+    dc.forward(i, i, forward);
     delay(50);
   }
 }

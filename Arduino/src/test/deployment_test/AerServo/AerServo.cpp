@@ -26,10 +26,10 @@ void AerServo :: setCurr_pos(float curr_pos) {
 
 //Basic Motion
 void AerServo :: move_right() {
-  this -> write(0);
+  this -> write(180);
 }
 void AerServo :: move_left() {
-  this -> write(180);
+  this -> write(0);
 }
 void AerServo :: stop() {
   this -> write(90);

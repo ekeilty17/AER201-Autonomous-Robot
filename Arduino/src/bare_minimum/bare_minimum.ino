@@ -329,17 +329,6 @@ void cone_deployment(){
   
   if (shouldDeploy != 0) {
     // Once an obstruction is detected, the machine needs to move forward a certain distance in order to deploy
-    detectionSensorsOn = false;
-    moveForward();
-    delay(100);
-    detectionSensorsOn = true;
-    //int adjusted_delay = (int) FORWARD * (1 - shouldDeploy/20.0);
-    //delay(adjusted_delay);
-    delay(FORWARD);
-    dc.stop(PWM_L, PWM_R, GRADUAL);
-    
-    detectionSensorsOn = false;
-    delay(500);
     isDeploying = true;         // To prevent line following during deployment
     switch(obstruction) {
       case HOLE:

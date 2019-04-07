@@ -79,7 +79,7 @@ void AerDCMotors :: forward(int pwm_val_L, int pwm_val_R, bool jump) {
         digitalWrite(_pinL2, LOW);
         analogWrite(_pinR1, 255);
         digitalWrite(_pinR2, LOW);
-        delay(25);
+        delay(100);
     }
     // steady movement
     analogWrite(_pinL1, pwm_val_L);
@@ -178,13 +178,19 @@ void AerDCMotors :: uturn_right(int pwm_val_turn, int pwm_val_L, int pwm_val_R, 
     this -> stop(pwm_val_L, pwm_val_R, false);
     delay(500);
     this -> forward(pwm_val_L, pwm_val_R, true);
-    delay(1500);
+    delay(2000);
     this -> stop(pwm_val_L, pwm_val_R, false);
     delay(500);
     this -> swing_right(pwm_val_turn);
     delay(turn_delay_2);
     this -> stop(pwm_val_L, pwm_val_R, false);
     delay(500);
+    this -> swing_right(pwm_val_turn);
+    /*
+    delay(turn_delay_1);
+    this -> stop(pwm_val_L, pwm_val_R, false);
+    delay(500);
+     */
 }
 void AerDCMotors :: uturn_left(int pwm_val_turn, int pwm_val_L, int pwm_val_R, int turn_delay_1, int turn_delay_2) {
     this -> pivot_left(pwm_val_turn);

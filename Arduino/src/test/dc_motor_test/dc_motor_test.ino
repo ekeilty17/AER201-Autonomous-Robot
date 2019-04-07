@@ -35,42 +35,7 @@ void setup() {
 int val = 0;
 
 void loop() {
-  while (1) {
-    /*
-    if (mySerial.available() > 0) {
-      val = val ^ mySerial.read();
-    }
-    */
-    val = val ^ 1;
-    if (val == 1) {
-      mySerial.write('5');
-    } else {
-      mySerial.write('6');
-    }
-    
-    delay(100);
-    /*
-    if (stat == 100) {
-      mySerial.write(stat);
-    } else {
-      mySerial.write(66);
-    }
-    */
-  }
-  /*
-  dc.forward(PWM_L, PWM_R);
-  curr_pos = 0;
-  while (stat != 0) {
-    if (mySerial.available() > 0) {
-      stat = mySerial.read();
-      //curr_pos += mySerial.read() * DISTANCE_CONVERSION;
-      //mySerial.write('R');
-    }
-    mySerial.write(stat);
-  }
-  mySerial.write(stat);
-  dc.stop();
-  */
+  wheel_test(dc, 255);
   while(1);
 }
 
@@ -106,12 +71,12 @@ void right_turn(AerDCMotors dc) {
   delay(1200);
   dc.stop();
 }
-
+*/
 
 void wheel_test(AerDCMotors dc, int pwm_val) {
   
   delay(1000);
-  dc.forward(pwm_val);
+  dc.forward(pwm_val, pwm_val);
   delay(1000);
   dc.stop();
   
@@ -140,4 +105,3 @@ void wheel_test(AerDCMotors dc, int pwm_val) {
   delay(1000);
   dc.stop();
 }
-*/

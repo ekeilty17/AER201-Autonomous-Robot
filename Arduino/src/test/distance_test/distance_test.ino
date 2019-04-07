@@ -6,16 +6,10 @@
 
 
 // Full Batteries
-#define PWM_L     225
-#define PWM_R     255
-#define PWM_ADJ_L 140
-#define PWM_ADJ_R 140
-/*
-// Half Dead Batteries
-#define PWM_L     200
-#define PWM_R     210
-#define PWM_ADJ   130
-*/
+#define PWM_L     160
+#define PWM_R     180
+#define PWM_ADJ_L 160
+#define PWM_ADJ_R 160
 
 //Arduino-PIC Comm
 const byte rxPin = 1;
@@ -55,9 +49,9 @@ void setup() {
 void loop() {
   
   
-  dc.forward(PWM_L, PWM_R);
-  delay(4000);
-  dc.stop();
+  dc.forward(PWM_L, PWM_R, true);
+  delay(8000);
+  dc.stop(PWM_L, PWM_R, false);
   
   detachInterrupt(digitalPinToInterrupt(line_interr));
   while(1);
@@ -70,7 +64,7 @@ void end_operations_test() {
     if (mySerial.available() > 0) {
       stat =  mySerial.read();
       if (stat == 'E') {
-        dc.stop();
+        dc.stop(PWM_L, PWM_R, false);
         detachInterrupt(digitalPinToInterrupt(line_interr));
         break;
       }
@@ -102,35 +96,33 @@ int get_rotary_encoder_data() {
   //return ((RE_left << 8) & 0xff00) | (RE_right & 0x00ff);
 }
 
-unsigned long lastInterrupt = 0;
 void line_follow_ISR(void) {
-  if (millis() - lastInterrupt > 200) {
-    line_follow();
-  }
-  lastInterrupt = millis();
-  //line_follow();
+  line_follow();
   return;
 }
 void line_follow() {
   if (isDeploying) {
-    dc.stop();
     return;
   }
   if (digitalRead(line_R) == LOW and digitalRead(line_L) == LOW) {
-    // Sensing now lines, go straight  
+    // Sensing now lines, go straight
+    dc.stop(PWM_L, PWM_R, false);
+    delay(100);
     dc.left_wheel_forward(PWM_L);
     dc.right_wheel_forward(PWM_R);
   } else if (digitalRead(line_R) == HIGH and digitalRead(line_L) == LOW) {
     // Sensor over right lane
-    dc.left_wheel_forward(PWM_ADJ_L);
     dc.right_wheel_stop();
+    delay(100);
+    dc.left_wheel_forward(PWM_ADJ_L);
   } else if (digitalRead(line_R) == LOW and digitalRead(line_L) == HIGH){
     // Sensor over left lane
     dc.left_wheel_stop();
+    delay(100);
     dc.right_wheel_forward(PWM_ADJ_R);
   } else {
     // Sensing both lanes
-    dc.stop();
+    dc.stop(PWM_L, PWM_R, true);
   }
 }
 
