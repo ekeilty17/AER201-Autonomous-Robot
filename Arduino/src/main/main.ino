@@ -51,8 +51,6 @@ volatile char stat_char = 0;
 volatile bool isDeploying = false;
 volatile bool detectionSensorsOn = true;
 
-volatile int lineFollow = 0;
-
 //Cone Deployment Functions
 void detection_ISR();
 void cone_deployment();
@@ -88,7 +86,7 @@ void setup() {
 
   // Initialize internal variables of classes
   dc.init();
-  dc.stop(PWM_L, PWM_R, false);
+  dc.stop();
   
   servo.init(); 
   servo.stop();
@@ -114,10 +112,6 @@ void setup() {
    *    The PIC will send the number 100 to tell the arduino to begin operation
    */
   while (1) {
-
-    if (BREAK_WAIT) {
-      break;
-    }
     
     // Waiting for PIC to initiate starting instruction
     if (mySerial.available() > 0) {
@@ -137,13 +131,11 @@ void setup() {
   pinMode(line_interr, INPUT);
   attachInterrupt(digitalPinToInterrupt(line_interr),line_follow_ISR,CHANGE);
 
-  // Small delay so user has time to back away after pressing 'A' on keypad
-  delay(1000);
+  // Delay between operator pressing start button and machine beginning operation
+  delay(500);
 
   // Operations begin by robot moving forward
-  dc.forward(PWM_L, PWM_R, JUMP);
-  moveForward();
-  
+  dc.forward();
 }
 
 void loop() {
@@ -158,10 +150,6 @@ void loop() {
    *        This is done by using a Queue, storing the type of obstruction and location in which it was detected
    */
   while(1) {
-
-    if(BREAK_MAIN) {
-      break;
-    }
     
     // Polling PIC to see if the machine has reached end of operation should end
     if (mySerial.available() > 0) {
@@ -171,17 +159,11 @@ void loop() {
       }
     }
 
+    // In case the machine stops on a line, which means the interrupt would not trigger
+    line_follow();
+    
     // Checking if there are obstructions that should be covered
     if (HC_q.isEmpty() == false){
-      /*
-      if (mySerial.available() > 0) {
-        stat_char =  mySerial.read();
-        if (stat_char == 'E') {
-          mySerial.write('A');
-          break;
-        }
-      }
-      */
       cone_deployment();
 
       /*
@@ -213,24 +195,22 @@ void loop() {
   detachInterrupt(digitalPinToInterrupt(SENSOR_CENTRE));
   
   // Clear any previously deployed cones
-  dc.forward(PWM_L, PWM_R, JUMP);
-  delay(1500);
-  dc.stop(PWM_L, PWM_R, GRADUAL);
-  delay(1000);
+  dc.forward();
+  delay(CONE_CLEAR);
+  dc.stop();
 
   // Turn off line following
   detachInterrupt(digitalPinToInterrupt(line_interr));
   
   // 180 degree turn
-  // uturn_right(int pwm_val_turn, int pwm_val_L, int pwm_val_R)
-  dc.uturn_right(225, PWM_L, PWM_R, TURN1, TURN2);
+  dc.uturn_right(PIVOT, FORWARD_PIVOT, true);
   
   // starting return trip
-  dc.forward(PWM_L, PWM_R, JUMP);
+  dc.forward();
   delay(RETURN);
   
   // Turning off drive system motors and line following sensors
-  dc.stop(PWM_L, PWM_R, GRADUAL);
+  dc.stop();
 
   // Tell PIC operations are complete
   mySerial.write('A');
@@ -257,7 +237,7 @@ void detection_ISR(){
   }
   
   // To prevent repeated input due to bad sensor signal
-  if (millis() - lastInterrupt > DEBOUNCE) {
+  if (millis() - lastInterrupt > DEBOUNCE_OBSTRUCTION) {
     
     //    ?        *         ?
     if (digitalRead(SENSOR_CENTRE) == LOW) {
@@ -293,16 +273,19 @@ void detection_ISR(){
       return;
     }
 
-    //mySerial.write('S');
     dc_stop();    // for some reason calling dc.stop() in the IRS doesn't work
     HC_q.enq(obstruction);
   }
   lastInterrupt = millis();
+
+  dc_stop();
+  delay(100);
+  line_follow();
   
   return;
 }
 void dc_stop() {
-  dc.stop(PWM_L, PWM_R, GRADUAL);
+  dc.stop();
 }
 
 
@@ -319,6 +302,7 @@ void cone_deployment(){
   detectionSensorsOn = false;
   int obstruction = HC_q.deq();
 
+  dc.stop();
   int shouldDeploy = -1;
   mySerial.write('R');
   while(shouldDeploy == -1) {
@@ -329,17 +313,14 @@ void cone_deployment(){
   
   if (shouldDeploy != 0) {
     // Once an obstruction is detected, the machine needs to move forward a certain distance in order to deploy
-    detectionSensorsOn = false;
-    moveForward();
-    delay(100);
-    detectionSensorsOn = true;
+    dc.forward();
+    line_follow();
     //int adjusted_delay = (int) FORWARD * (1 - shouldDeploy/20.0);
     //delay(adjusted_delay);
     delay(FORWARD);
-    dc.stop(PWM_L, PWM_R, GRADUAL);
+    dc.stop();
     
     detectionSensorsOn = false;
-    delay(500);
     isDeploying = true;         // To prevent line following during deployment
     switch(obstruction) {
       case HOLE:
@@ -357,16 +338,15 @@ void cone_deployment(){
       default:
         break;
     }
-    isDeploying = false;
     detectionSensorsOn = true;
+    isDeploying = false;
     
     // putting servo in neutral position
     //servo.to_middle();
   }
 
   // Begin moving after done deployment
-  //mySerial.write('G');
-  moveForward();
+  line_follow();
   
   return;
 }
@@ -410,7 +390,6 @@ void center_crack_deploy() {
 }
 
 
-
 /*  Line Following
  * 
  *    if (detected a lane):
@@ -420,28 +399,6 @@ void center_crack_deploy() {
  *    if (neither lanes detected):
  *        put both motors back to regular driving speed
  */
-void moveForward() {
-  switch(lineFollow) {
-    case 0:
-//      dc.left_wheel_forward(PWM_L);
-//      dc.right_wheel_forward(PWM_R);
-      dc.forward(PWM_L, PWM_R, JUMP);
-      break;
-    case 1:
-      dc.right_wheel_stop();
-      delay(100);
-      dc.left_wheel_forward(PWM_ADJ_L);
-      break;
-    case 10:
-      dc.left_wheel_stop();
-      delay(100);
-      dc.right_wheel_forward(PWM_ADJ_R);
-      break;
-    default:
-      dc.forward(PWM_L, PWM_R, JUMP);
-      break;
-  }
-}
 void line_follow_ISR(void) {
   line_follow();
   return;
@@ -452,26 +409,18 @@ void line_follow() {
   }
   if (digitalRead(line_R) == LOW and digitalRead(line_L) == LOW) {
     // Sensing now lines, go straight
-    lineFollow = 0;
-    dc.stop(PWM_L, PWM_R, false);
-    delay(100);
-    dc.left_wheel_forward(PWM_L);
-    dc.right_wheel_forward(PWM_R);
+    dc.left_wheel_forward();
+    dc.right_wheel_forward();
   } else if (digitalRead(line_R) == HIGH and digitalRead(line_L) == LOW) {
     // Sensor over right lane
-    lineFollow = 1;
     dc.right_wheel_stop();
-    delay(100);
-    dc.left_wheel_forward(PWM_ADJ_L);
+    dc.left_wheel_forward();
   } else if (digitalRead(line_R) == LOW and digitalRead(line_L) == HIGH){
     // Sensor over left lane
-    lineFollow = 10;
     dc.left_wheel_stop();
-    delay(100);
-    dc.right_wheel_forward(PWM_ADJ_R);
+    dc.right_wheel_forward();
   } else {
     // Sensing both lanes
-    lineFollow = 11;
-    dc.stop(PWM_L, PWM_R, GRADUAL);
+    dc.stop();
   }
 }

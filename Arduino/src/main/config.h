@@ -1,30 +1,19 @@
-
-// DC Motors
-#define PWM_L     255
-#define PWM_R     255
-#define PWM_ADJ_L 255
-#define PWM_ADJ_R 255
-
 // Servo
 #define MIDDLE_TO_EDGE  2000
 #define EDGE_TO_EDGE    3000
 #define EDGE_TO_3       300
-#define _3_TO_10        1300
+#define _3_TO_10        1000
 #define EDGE_TO_6       600
 
 // Cone deployment
-#define FORWARD   300
+#define DEBOUNCE_OBSTRUCTION  500
+#define FORWARD   4000
 
-// Return Trip    
-#define TURN1     1200
-#define TURN2     1000
-#define RETURN    2000
+#define DEBOUNCE_LINEFOLLOW  100
 
-// Tuning
-#define JUMP      false
-#define GRADUAL   false
-#define DEBOUNCE  500
-
-// Testing
-#define BREAK_WAIT  false
-#define BREAK_MAIN  false
+#define CONE_CLEAR      4000
+#define SWING           8000
+#define FORWARD_SWING   3000
+#define PIVOT           5500
+#define FORWARD_PIVOT   5500
+#define RETURN          80000

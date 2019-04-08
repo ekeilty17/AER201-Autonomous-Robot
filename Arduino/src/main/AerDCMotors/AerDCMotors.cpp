@@ -20,35 +20,25 @@ void AerDCMotors :: init() {
 }
 
 //Moving Wheels
-void AerDCMotors :: left_wheel_forward(int pwm_val) {
-    analogWrite(_pinL1, 255);
-    digitalWrite(_pinL2, LOW);
-    delay(100);
-    analogWrite(_pinL1, pwm_val);
+void AerDCMotors :: left_wheel_forward() {
+    digitalWrite(_pinL1, HIGH);
     digitalWrite(_pinL2, LOW);
 }
-void AerDCMotors :: right_wheel_forward(int pwm_val) {
-    analogWrite(_pinR1, 255);
-    digitalWrite(_pinR2, LOW);
-    delay(100);
-    analogWrite(_pinR1, pwm_val);
+void AerDCMotors :: right_wheel_forward() {
+    digitalWrite(_pinR1, HIGH);
     digitalWrite(_pinR2, LOW);
 }
-void AerDCMotors :: left_wheel_backward(int pwm_val) {
+void AerDCMotors :: left_wheel_backward() {
     digitalWrite(_pinL1, LOW);
-    analogWrite(_pinL2, pwm_val);
+    digitalWrite(_pinL2, HIGH);
 }
-void AerDCMotors :: right_wheel_backward(int pwm_val) {
+void AerDCMotors :: right_wheel_backward() {
     digitalWrite(_pinR1, LOW);
-    analogWrite(_pinR2, pwm_val);
+    digitalWrite(_pinR2, HIGH);
 }
 void AerDCMotors :: left_wheel_stop() {
     digitalWrite(_pinL1,HIGH);
     digitalWrite(_pinL2,HIGH);
-    /*
-    analogWrite(_pinL1, 0);
-    analogWrite(_pinL2, 0);
-     */
     /*
      digitalWrite(_pinL1,HIGH);
      digitalWrite(_pinL2,HIGH);
@@ -68,141 +58,66 @@ void AerDCMotors :: right_wheel_stop() {
 }
 
 //Moving Robot (simple)
-void AerDCMotors :: forward(int pwm_val_L, int pwm_val_R, bool jump) {
-    /*
-     this -> left_wheel_forward(pwm_val_L);
-     this -> right_wheel_forward(pwm_val_R);
-     */
-    // jump start
-    if (jump) {
-        analogWrite(_pinL1, 255);
-        digitalWrite(_pinL2, LOW);
-        analogWrite(_pinR1, 255);
-        digitalWrite(_pinR2, LOW);
-        delay(100);
-    }
-    // steady movement
-    analogWrite(_pinL1, pwm_val_L);
-    digitalWrite(_pinL2, LOW);
-    analogWrite(_pinR1, pwm_val_R);
-    digitalWrite(_pinR2, LOW);
+void AerDCMotors :: forward() {
+     this -> left_wheel_forward();
+     this -> right_wheel_forward();
     
 }
-void AerDCMotors :: backward(int pwm_val) {
-    /*
-     this -> left_wheel_backward(pwm_val);
-     this -> right_wheel_backward(pwm_val);
-     */
-    
-    digitalWrite(_pinL1, LOW);
-    analogWrite(_pinL2, pwm_val);
-    digitalWrite(_pinR1, LOW);
-    analogWrite(_pinR2, pwm_val);
+void AerDCMotors :: backward() {
+     this -> left_wheel_backward();
+     this -> right_wheel_backward();
 }
-void AerDCMotors :: stop(int pwm_val_L, int pwm_val_R, int gradual) {
-    
-    if (gradual) {
-        this -> gradual_stop(pwm_val_L, pwm_val_R);
-        return;
-    }
-    
-    int pwm_low;
-    if (pwm_val_L < pwm_val_R) {
-        pwm_low = pwm_val_L;
-    } else {
-        pwm_low = pwm_val_R;
-    }
-    
-    digitalWrite(_pinL1, LOW);
-    analogWrite(_pinL2, pwm_low);
-    digitalWrite(_pinR1, LOW);
-    analogWrite(_pinR2, pwm_low);
-    delay(10);
-    digitalWrite(_pinL1,LOW);
-    digitalWrite(_pinL2,LOW);
-    digitalWrite(_pinR1,LOW);
-    digitalWrite(_pinR2,LOW);
-    /*
+void AerDCMotors :: stop() {
     this -> left_wheel_stop();
     this -> right_wheel_stop();
-     */
-}
-void AerDCMotors :: gradual_stop(int pwm_val_L, int pwm_val_R) {
-    
-    int pwm_low;
-    if (pwm_val_L < pwm_val_R) {
-        pwm_low = pwm_val_L;
-    } else {
-        pwm_low = pwm_val_R;
-    }
-    
-    analogWrite(_pinL1, pwm_low);
-    digitalWrite(_pinL2, LOW);
-    analogWrite(_pinR1, pwm_low);
-    digitalWrite(_pinR2, LOW);
-    
-    for (int i=pwm_low; i>0; i--) {
-        analogWrite(_pinL1, i);
-        digitalWrite(_pinL2, LOW);
-        analogWrite(_pinR1, i);
-        digitalWrite(_pinR2, LOW);
-        delay(5);
-    }
-    
-    digitalWrite(_pinL1,LOW);
-    digitalWrite(_pinL2,LOW);
-    digitalWrite(_pinR1,LOW);
-    digitalWrite(_pinR2,LOW);
 }
 
 //Moving Robot (complex)
-void AerDCMotors :: pivot_left(int pwm_val) {
-    this -> left_wheel_backward(pwm_val);
-    this -> right_wheel_forward(pwm_val);
+void AerDCMotors :: pivot_left() {
+    this -> left_wheel_backward();
+    this -> right_wheel_forward();
 }
-void AerDCMotors :: pivot_right(int pwm_val) {
-    this -> left_wheel_forward(pwm_val);
-    this -> right_wheel_backward(pwm_val);
+void AerDCMotors :: pivot_right() {
+    this -> left_wheel_forward();
+    this -> right_wheel_backward();
 }
-void AerDCMotors :: swing_left(int pwm_val) {
+void AerDCMotors :: swing_left() {
     this -> left_wheel_stop();
-    this -> right_wheel_forward(pwm_val);
+    this -> right_wheel_forward();
 }
-void AerDCMotors :: swing_right(int pwm_val) {
-    this -> left_wheel_forward(pwm_val);
+void AerDCMotors :: swing_right() {
+    this -> left_wheel_forward();
     this -> right_wheel_stop();
 }
-void AerDCMotors :: uturn_right(int pwm_val_turn, int pwm_val_L, int pwm_val_R, int turn_delay_1, int turn_delay_2) {
-    this -> swing_right(pwm_val_turn);
-    delay(turn_delay_1);
-    this -> stop(pwm_val_L, pwm_val_R, false);
+void AerDCMotors :: uturn_right(int turn_delay, int forward_delay, bool pivot) {
+    
+    if (pivot) {
+        this -> pivot_right();
+    } else {
+        this -> swing_right();
+    }
+    delay(turn_delay);
+    
+    this -> stop();
     delay(500);
-    this -> forward(pwm_val_L, pwm_val_R, true);
-    delay(2000);
-    this -> stop(pwm_val_L, pwm_val_R, false);
+    this -> forward();
+    delay(forward_delay);
+    this -> stop();
     delay(500);
-    this -> swing_right(pwm_val_turn);
-    delay(turn_delay_2);
-    this -> stop(pwm_val_L, pwm_val_R, false);
+    
+    if (pivot) {
+        this -> pivot_right();
+    } else {
+        this -> swing_right();
+    }
+    delay(turn_delay);
+    
+    this -> stop();
     delay(500);
-    this -> swing_right(pwm_val_turn);
+    this -> swing_right();
     /*
     delay(turn_delay_1);
     this -> stop(pwm_val_L, pwm_val_R, false);
     delay(500);
      */
-}
-void AerDCMotors :: uturn_left(int pwm_val_turn, int pwm_val_L, int pwm_val_R, int turn_delay_1, int turn_delay_2) {
-    this -> pivot_left(pwm_val_turn);
-    delay(0000);
-    this -> stop(pwm_val_L, pwm_val_R, false);
-    delay(000);
-    this -> forward(pwm_val_L, pwm_val_R, true);
-    delay(0000);
-    this -> stop(pwm_val_L, pwm_val_R, false);
-    delay(000);
-    this -> pivot_left(pwm_val_turn);
-    delay(0000);
-    this -> stop(pwm_val_L, pwm_val_R, false);
-    delay(000);
 }
