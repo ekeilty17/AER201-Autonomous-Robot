@@ -50,6 +50,8 @@ volatile char stat_char = 0;
 
 volatile bool isDeploying = false;
 volatile bool detectionSensorsOn = true;
+volatile bool isTimer = false;
+volatile bool returnTrip = false;
 
 //Cone Deployment Functions
 void detection_ISR();
@@ -59,6 +61,7 @@ void left_crack_deploy();
 void right_crack_deploy();
 void centre_crack_deploy();
 void center_crack_deploy();
+void safe_crack_deploy();
 
 //Line Following Functions
 void line_follow_ISR();
@@ -136,6 +139,7 @@ void setup() {
 
   // Operations begin by robot moving forward
   dc.forward();
+  
 }
 
 void loop() {
@@ -159,6 +163,12 @@ void loop() {
       }
     }
 
+    // Total time of operation must be less than 
+    if (millis() > (180000 - (CONE_CLEAR + PIVOT + FORWARD_PIVOT + RETURN + 2000))) {
+      isTimer = true;
+      break;
+    }
+    
     // In case the machine stops on a line, which means the interrupt would not trigger
     line_follow();
     
@@ -191,6 +201,7 @@ void loop() {
    *    4) Using rotary encoder data, the machine travels the distance of the lane (4m) until it is behind the start line
    *    5) All motors are turned off and all sensors detached. The machine then waits idle.
    */
+  
   // Turn off obstruction sensors
   detachInterrupt(digitalPinToInterrupt(SENSOR_CENTRE));
   
@@ -198,12 +209,16 @@ void loop() {
   dc.forward();
   delay(CONE_CLEAR);
   dc.stop();
+  servo.to_middle();
 
   // Turn off line following
-  detachInterrupt(digitalPinToInterrupt(line_interr));
+  isDeploying = true;
   
   // 180 degree turn
   dc.uturn_right(PIVOT, FORWARD_PIVOT, true);
+
+  // reverse line following
+  returnTrip = true;
   
   // starting return trip
   dc.forward();
@@ -212,8 +227,15 @@ void loop() {
   // Turning off drive system motors and line following sensors
   dc.stop();
 
+  // detect line following pins
+  detachInterrupt(digitalPinToInterrupt(line_interr));
+
   // Tell PIC operations are complete
-  mySerial.write('A');
+  if (isTimer) {
+    mySerial.write('E');
+  } else {
+    mySerial.write('A');
+  }
   
   // Waiting idle
   while(1);
@@ -322,6 +344,7 @@ void cone_deployment(){
     
     detectionSensorsOn = false;
     isDeploying = true;         // To prevent line following during deployment
+    /*
     switch(obstruction) {
       case HOLE:
         hole_deploy();
@@ -338,11 +361,17 @@ void cone_deployment(){
       default:
         break;
     }
+    */
+    if (obstruction == HOLE) {
+      hole_deploy();
+    } else {
+      safe_crack_deploy();
+    }
+    
     detectionSensorsOn = true;
     isDeploying = false;
     
     // putting servo in neutral position
-    //servo.to_middle();
   }
 
   // Begin moving after done deployment
@@ -358,11 +387,12 @@ void hole_deploy() {
 void left_crack_deploy() {
   // Cone 1
   servo.move_to_time(-MIDDLE_TO_EDGE);
-  servo.move_to_time(EDGE_TO_3);
+  servo.move_to_time(EDGE_TO_3+600);
   stepp.drop_cone();
   // Cone 2
   servo.move_to_time(_3_TO_10);
   stepp.drop_cone();
+  servo.setCurr_pos(15);
 }
 void right_crack_deploy() {
   // Cone 1
@@ -388,6 +418,17 @@ void centre_crack_deploy() {
 void center_crack_deploy() {
   centre_crack_deploy();
 }
+void safe_crack_deploy() {
+  // Cone 1
+  servo.move_to_time(-MIDDLE_TO_EDGE+250);
+  servo.move_to_time(EDGE_TO_3);
+  stepp.drop_cone();
+  // Cone 2
+  servo.move_to_time(EDGE_TO_EDGE+150);
+  servo.move_to_time(-EDGE_TO_3);
+  stepp.drop_cone();
+  servo.setCurr_pos(15);
+}
 
 
 /*  Line Following
@@ -400,7 +441,11 @@ void center_crack_deploy() {
  *        put both motors back to regular driving speed
  */
 void line_follow_ISR(void) {
-  line_follow();
+  if (returnTrip) {
+    reverse_line_follow();
+  } else {
+    line_follow();
+  }
   return;
 }
 void line_follow() {
@@ -421,6 +466,29 @@ void line_follow() {
     dc.right_wheel_forward();
   } else {
     // Sensing both lanes
-    dc.stop();
+    dc.left_wheel_forward();
+    dc.right_wheel_forward();
+  }
+}
+void reverse_line_follow() {
+  if (isDeploying) {
+    return;
+  }
+  if (digitalRead(line_R) == LOW and digitalRead(line_L) == LOW) {
+    // Sensing now lines, go straight
+    dc.left_wheel_forward();
+    dc.right_wheel_forward();
+  } else if (digitalRead(line_R) == HIGH and digitalRead(line_L) == LOW) {
+    // Sensor over left lane
+    dc.left_wheel_stop();
+    dc.right_wheel_forward();
+  } else if (digitalRead(line_R) == LOW and digitalRead(line_L) == HIGH){
+    // Sensor over right lane
+    dc.right_wheel_stop();
+    dc.left_wheel_forward();
+  } else {
+    // Oops we in the lane
+    dc.left_wheel_forward();
+    dc.right_wheel_forward();
   }
 }

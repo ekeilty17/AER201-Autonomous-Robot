@@ -15,26 +15,24 @@ class AerDCMotors{
     void init();
   
     //Moving Wheels
-    void left_wheel_forward(int pwm_val);
-    void right_wheel_forward(int pwm_val);
-    void left_wheel_backward(int pwm_val);
-    void right_wheel_backward(int pwm_val);
+    void left_wheel_forward();
+    void right_wheel_forward();
+    void left_wheel_backward();
+    void right_wheel_backward();
     void left_wheel_stop();
     void right_wheel_stop();
 
     //Moving Robot (simple)
-    void forward(int pwm_val_L, int pwm_val_R, bool jump);
-    void backward(int pwm_val);
-    void stop(int pwm_val_L, int pwm_val_R);
-    void gradual_stop(int pwm_val_L, int pwm_val_R);
+    void forward();
+    void backward();
+    void stop();
 
     //Moving Robot (complex)
-    void pivot_right(int pwm_val);
-    void pivot_left(int pwm_val);
-    void swing_right(int pwm_val);
-    void swing_left(int pwm_val);
-    void uturn_right(int pwm_val_turn, int pwm_val_L, int pwm_val_R, int turn_delay_1, int turn_delay_2);
-    void uturn_left(int pwm_val_turn, int pwm_val_L, int pwm_val_R, int turn_delay_1, int turn_delay_2);
+    void pivot_right();
+    void pivot_left();
+    void swing_right();
+    void swing_left();
+    void uturn_right(int turn_delay, int forward_delay, bool pivot);
 };
 
 #endif  /* AERDCMOTORS_H */

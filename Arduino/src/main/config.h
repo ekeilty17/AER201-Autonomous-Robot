@@ -1,19 +1,19 @@
 // Servo
-#define MIDDLE_TO_EDGE  2000
+#define MIDDLE_TO_EDGE  3000
 #define EDGE_TO_EDGE    3000
-#define EDGE_TO_3       300
-#define _3_TO_10        1000
-#define EDGE_TO_6       600
+#define EDGE_TO_3       500
+#define _3_TO_10        1200
+#define EDGE_TO_6       400
 
 // Cone deployment
-#define DEBOUNCE_OBSTRUCTION  500
-#define FORWARD   4000
+#define DEBOUNCE_OBSTRUCTION  25
+#define FORWARD   3700
 
 #define DEBOUNCE_LINEFOLLOW  100
 
 #define CONE_CLEAR      4000
+#define PIVOT           3500
+#define FORWARD_PIVOT   6000
 #define SWING           8000
 #define FORWARD_SWING   3000
-#define PIVOT           5500
-#define FORWARD_PIVOT   5500
-#define RETURN          80000
+#define RETURN          60000
