@@ -9,11 +9,7 @@
 #define DEBOUNCE_OBSTRUCTION  25
 #define FORWARD   3700
 
-#define DEBOUNCE_LINEFOLLOW  100
-
 #define CONE_CLEAR      4000
 #define PIVOT           3500
 #define FORWARD_PIVOT   6000
-#define SWING           8000
-#define FORWARD_SWING   3000
 #define RETURN          60000

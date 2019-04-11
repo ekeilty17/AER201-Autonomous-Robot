@@ -150,8 +150,12 @@ void loop() {
    *          - If the machine has no remaining cones to deploy
    *          - If the machine has traveled the full length of the lane (4m)
    *        The arduino will be told to stop by the PIC
-   *    2) Check if an obstruction has been detected and deploy accordingly
-   *        This is done by using a Queue, storing the type of obstruction and location in which it was detected
+   *    2) Check if the total run time will be over 3 minutes
+   *        This is done by summing how long the return sequence will take, 
+   *        subtracting from 180000 seconds and adding a 10 second buffer
+   *    3) Check if an obstruction has been detected and deploy accordingly
+   *        This is done by using a Queue, storing the type of obstruction 
+   *        and location in which it was detected
    */
   while(1) {
     
@@ -164,7 +168,7 @@ void loop() {
     }
 
     // Total time of operation must be less than 
-    if (millis() > (180000 - (CONE_CLEAR + PIVOT + FORWARD_PIVOT + RETURN + 2000))) {
+    if (millis() > (180000 - (CONE_CLEAR + PIVOT + FORWARD_PIVOT + RETURN + 10000))) {
       isTimer = true;
       break;
     }
@@ -195,10 +199,10 @@ void loop() {
    *       Note: line following is kept on to that the machine does not veer into the lane on the return trip.
    *    2) The machine moves forward to ensure it has cleared any cones that were previously deployed
    *    3) The machine does a uturn, which consists of the following
-   *          - 90 degree swing turn
+   *          - 90 degree pivot turn
    *          - forward movement
-   *          - 90 degree swing turn
-   *    4) Using rotary encoder data, the machine travels the distance of the lane (4m) until it is behind the start line
+   *          - 90 degree pivot turn
+   *    4) The machine travels the distance of the lane (4m) until it is behind the start line
    *    5) All motors are turned off and all sensors detached. The machine then waits idle.
    */
   
@@ -315,7 +319,9 @@ void dc_stop() {
 /*
  * 1) move forward to position chute on obstruction
  * 2) based on previous deployment and rotary encoder data determine if the obstruction should be covered
- *      - This will be sent by the PIC in the form of a 'T' for deploy and a 'F' for skip
+ *      - This will be sent by the PIC in the form of a number 
+ *      - If the number is 0, then the cone should be skipped
+ *      - If the number is not 0, then that is the distance the robot needs to move in order to deploy the next cone
  * 3) continue forward
  */
 
@@ -435,7 +441,6 @@ void safe_crack_deploy() {
  * 
  *    if (detected a lane):
  *      turn off corresponding motor
- *      set other motor to a lower speed (called PWM_ADJ)
  *    
  *    if (neither lanes detected):
  *        put both motors back to regular driving speed
